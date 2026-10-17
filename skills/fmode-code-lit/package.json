@@ -1,0 +1,37 @@
+{
+  "name": "fmode-code-lit",
+  "version": "1.0.0",
+  "description": "Claude Code 技能：Lit 原生 ESM 无构建前端开发（零编译/零打包），分层规范 + importmap + signals + context + router + 多标签 KeepAlive。提供项目脚手架、组件/服务/页面生成器与规则安装器。",
+  "type": "commonjs",
+  "bin": {
+    "fmode-code-lit": "bin/fmode-code-lit.js"
+  },
+  "scripts": {
+    "smoke": "node skills/fmode-code-lit/scripts/smoke.mjs"
+  },
+  "files": [
+    "bin/",
+    "README.md",
+    "LICENSE",
+    "skill-package-manifest.json",
+    "skills/"
+  ],
+  "keywords": [
+    "claude-code",
+    "claude-skill",
+    "fmode",
+    "lit",
+    "webcomponents",
+    "native-esm",
+    "importmap",
+    "no-build",
+    "signals",
+    "frontend"
+  ],
+  "license": "MPL-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@git.fmode.cn/fmode/fmode-code-lit.git"
+  },
+  "homepage": "https://git.fmode.cn/fmode/fmode-code-lit"
+}

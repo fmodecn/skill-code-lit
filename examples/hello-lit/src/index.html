@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hello Lit · fmode-code-lit 示例</title>
+
+  <!-- 二级子路径部署必须：否则 ./app.js 等相对路径 404 -->
+  <base href="/hello-lit/" />
+
+  <!--
+    公共 importmap 托管在 FMODE Repose，全业务复用。
+    本地开发可临时换成同目录的 ./importmap.json（见下方注释）。
+  -->
+  <script type="importmap" src="/npm/importmap/lit-v3.json"></script>
+  <!-- 本地无 Repose 时改用： <script type="importmap" src="./importmap.json"></script> -->
+
+  <style>
+    :root { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    body { margin: 0; }
+    app-root { display: block; min-height: 100vh; }
+    /* 全局主题可通过 CSS 自定义属性穿透 Shadow DOM */
+    :root { --brand: #2b6cb0; --bg: #f7fafc; --border: #e2e8f0; }
+  </style>
+</head>
+<body>
+  <app-root></app-root>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

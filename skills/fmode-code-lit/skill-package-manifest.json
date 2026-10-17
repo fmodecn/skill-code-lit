@@ -1,0 +1,17 @@
+{
+  "name": "fmode-code-lit",
+  "version": "1.0.0",
+  "description": "Claude Code 独立技能包：用 Lit 原生 ESM 无构建方式写前端（零编译/零打包/浏览器直跑），分层规范 + importmap + signals 响应式 + context 注入 + router History 路由 + 多标签 KeepAlive，配套规则仓与 OBS+CDN 部署。",
+  "plugin": "fmode-code-lit",
+  "skills": [
+    "fmode-code-lit"
+  ],
+  "entrySkill": "fmode-code-lit",
+  "npmPackage": "fmode-code-lit",
+  "smokeCommand": "node scripts/smoke.mjs",
+  "installCommand": "npx fmode-code-lit@latest install",
+  "workspaceInstallCommand": "npx fmode-code-lit@latest workspace",
+  "workspaceSkillPath": ".claude/skills/fmode-code-lit/SKILL.md",
+  "globalSkillPath": "~/.claude/skills/fmode-code-lit/SKILL.md",
+  "installHint": "工作区安装：npx fmode-code-lit@latest workspace，写入 ./.claude/skills/fmode-code-lit/。用户级安装：npx fmode-code-lit@latest install，写入 ~/.claude/skills/fmode-code-lit/。随后可用 npx fmode-code-lit@latest scaffold <dir> --project <name> 生成无构建 Lit 项目骨架。规则细则见 fmode-code-lit 规则仓 .claude/rules/。"
+}

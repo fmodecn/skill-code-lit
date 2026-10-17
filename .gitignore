@@ -1,0 +1,17 @@
+# 依赖（仅本地类型提示，不参与部署产物）
+node_modules/
+
+# 构建产物（本方案无构建，预留）
+dist/
+
+# 编辑器 / 系统
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.log
+
+# 本地私有配置（可能含部署凭据，绝不入库）
+.env
+.env.local
+*.local.json

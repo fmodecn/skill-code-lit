@@ -1,0 +1,13 @@
+{
+  "name": "fmode-code-lit-rules",
+  "private": true,
+  "type": "module",
+  "description": "fmode-code-lit 规则仓：Lit 原生 ESM 无构建前端开发规范。本仓不含运行时依赖（源码即产物）。",
+  "_comment": "此 package.json 仅用于本地工具链与示例；规则仓本体不被打包。",
+  "scripts": {
+    "smoke": "node skills/fmode-code-lit/scripts/smoke.mjs",
+    "install-skill": "node skills/fmode-code-lit/scripts/install.mjs install --force",
+    "serve-example": "npx --yes serve examples/hello-lit/src"
+  },
+  "license": "MPL-2.0"
+}

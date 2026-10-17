@@ -1,0 +1,84 @@
+# fmode-code-lit — Lit 原生 ESM 无构建开发规则总纲
+
+> 本文件是 AI（Claude Code / FmodeCode）在本仓、或引用本仓规则时的**第一入口**。
+> 写任何 Lit 前端代码前，先读本文件，再按下表索引到具体规则篇。
+> 源稿：`.claude/_lit-dev-manual.md`（用户提供的《Lit 原生 ESM 无构建开发最佳实践》）。
+
+## 0. 三条铁律（违反即返工）
+
+1. **源码即产物**：不引入任何构建/打包器（rollup / esbuild / vite / webpack）。写好的 `.js` 直接上传 OBS，浏览器原生 ESM 执行。
+2. **依赖不落地项目**：`lit`、`@lit-labs/*` 等运行时依赖一律从 **FMODE Repose** 公共 importmap 引入，**禁止**把依赖源码拷进业务仓、禁止业务仓 `import` 裸 `node_modules`。
+3. **分层不可越界**：组件（渲染）→ 服务（业务与状态）→ 工具（无状态函数）。组件禁止直接 `fetch`、禁止写复杂业务逻辑；服务禁止触碰 DOM。
+
+## 1. 规则索引
+
+| # | 规则篇 | 内容 | 何时读 |
+|---|--------|------|--------|
+| 1 | [architecture.md](./.claude/rules/architecture.md) | 整体架构、分层职责、运行流程、部署拓扑 | 起项目 / 定架构 |
+| 2 | [project-structure.md](./.claude/rules/project-structure.md) | 目录规范、命名、文件摆放、二级路径 base | 建目录 / 放文件 |
+| 3 | [components.md](./.claude/rules/components.md) | LitElement 组件规范、Shadow DOM、属性/事件、Slot | 写组件 |
+| 4 | [services.md](./.claude/rules/services.md) | Service 分层、Signal 状态、单例、可单测 | 写服务 / 状态 |
+| 5 | [context-di.md](./.claude/rules/context-di.md) | `@lit-labs/context` 令牌与 provide/consume | 做依赖注入 |
+| 6 | [routing.md](./.claude/rules/routing.md) | `@lit-labs/router` History 路由、守卫、404 | 做路由 |
+| 7 | [tabs-keepalive.md](./.claude/rules/tabs-keepalive.md) | 后台多标签 + KeepAlive（实例常驻） | 做后台壳 |
+| 8 | [http-utils.md](./.claude/rules/http-utils.md) | 原生 Fetch 封装、token 拦截、错误处理、utils | 写请求 / 工具 |
+| 9 | [deployment.md](./.claude/rules/deployment.md) | FMODE Repose 依赖托管 + OBS+CDN 业务部署 + importmap | 上线 / 配依赖 |
+| 10 | [pitfalls.md](./.claude/rules/pitfalls.md) | CORS / 版本冲突 / 302 陷阱 / base href 等坑位 | 排查问题 |
+| 11 | [modules/](./.claude/rules/modules/) | 功能模块 / 通用能力 / 业务模块 划分最佳实践 | 模块拆分 |
+| 12 | [retrospective.md](./docs/retrospective.md) | 对标 Angular zoneless 的技术复盘 | 理解选型理由 |
+
+## 2. 架构一句话
+
+浏览器打开 URL → CDN 回退规则把不存在的路径 **200（非 302）** 返回 `index.html` → `index.html` 加载 **公共 importmap**（指向 FMODE Repose）→ 加载 `app.js` → `import` lit 依赖 → 初始化 Store / 路由 / 根组件 → 渲染。全程**零编译**。
+
+## 3. 默认技术选型
+
+| 关注点 | 选择 | 备注 |
+|--------|------|------|
+| 视图 | Lit 3.x `LitElement` | Shadow DOM 隔离 |
+| 全局状态 | `@lit-labs/signals` + Service 单例 | 跨组件共享 |
+| 组件本地状态 | Lit `@property` / `@state` | 弹窗、输入框 |
+| 依赖注入 | `@lit-labs/context` | 令牌 + provide/consume |
+| 路由 | `@lit-labs/router` | History 干净 URL |
+| 请求 | 原生 `fetch` 薄封装 | 不引 axios |
+| 持久化 | `localStorage` 薄封装 | 一次性配置 |
+| 部署 | OBS + CDN | 无构建直传 |
+
+## 4. 状态放哪？（高频决策）
+
+| 场景 | 方案 |
+|------|------|
+| 全局业务状态，多页共享（登录态、字典、权限） | **Signal Service + Context 注入**（首选） |
+| 组件本地 UI 状态（弹窗开关、表单输入） | Lit `@property` / `@state` |
+| 简单应用不想引 signals | `EventTarget` 简易 Store + Context |
+| 一次性持久化配置 | `localStorage` 封装（`utils/storage.js`） |
+
+> ⚠️ 两套响应式**必须分开**：跨组件全局业务状态用 **Signal**；组件内部 UI 用 **Lit property**。混用会导致更新时机错乱。
+
+## 5. 部署速查
+
+- **依赖** → 同步 npm 原始 ESM 到 **FMODE Repose**（按版本目录化，开 HTTP/2，`.js` 必须 `text/javascript`，CORS 放行业务域名），全业务共享一份公共 importmap。
+- **业务码** → `obsutil` 同步 `src/` 到 OBS（华为云 `obs://www-fmode.cn/<project>/`，南一端点），`public-read`，CDN 指向 `fmode.cn/<project>/`，最后刷新 CDN。
+- **子目录部署必须写 `<base href="/<project>/">`**，否则相对 JS 404。
+- **History 回退**：CDN 配置「不存在路径返回 `index.html` 且状态码 **200**」，**严禁 302/301**（否则地址栏被改写、微信 OAuth 回调失败）。
+
+详见 [deployment.md](./.claude/rules/deployment.md)。
+
+## 6. 命名约定（速记）
+
+- 组件文件：`kebab-case.js`，类名 `PascalCase`，自定义元素标签 `kebab-case`（必须含连字符）
+- 服务文件：`xxx-service.js`，类 `XxxService`，单例导出 `export const xxxService = new XxxService()`
+- 工具文件：`xxx.js`，导出纯函数
+- 页面路由：`routes/page-xxx.js`，标签 `<page-xxx>`
+- 目录一律小写 kebab-case
+
+## 7. 动手清单（新建项目时）
+
+1. `index.html`：`<base>` + `<script type="importmap" src="<公共importmap>">` + `<script type="module" src="./app.js">`
+2. 建 `components/ routes/ services/ utils/`
+3. `app.js`：provide 全局 Service + 挂载 Router + 根组件
+4. 每个 Service 用 Signal 存状态，单例导出
+5. 页面组件 `SignalWatcher(LitElement)` + `consume` Service
+6. 部署脚本：`obsutil sync` + CDN refresh
+
+> 具体脚手架：用全局技能 `fmode-code-lit`（`npx fmode-code-lit@latest workspace`）一键生成。

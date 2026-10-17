@@ -1,0 +1,17 @@
+{
+  "name": "hello-lit",
+  "private": true,
+  "type": "module",
+  "description": "fmode-code-lit 无构建 Lit 示例（源码即产物，无需 build）",
+  "_comment": "devDependencies 仅用于本地 IDE 类型提示与离线运行，不参与部署产物。",
+  "scripts": {
+    "serve": "npx --yes serve src",
+    "deploy": "bash deploy.sh"
+  },
+  "devDependencies": {
+    "lit": "^3.2.1",
+    "@lit-labs/signals": "^0.1.3",
+    "@lit-labs/context": "^0.5.1",
+    "@lit-labs/router": "^0.2.0"
+  }
+}

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <title>hello-lit · 无构建自检</title>
+  <style>body{font-family:system-ui;padding:20px}#out{white-space:pre-wrap;font-family:ui-monospace,monospace;font-size:13px}.ok{color:#2f855a}.bad{color:#c53030}</style>
+</head>
+<body>
+  <h1>hello-lit 自检</h1>
+  <p>验证依赖解析、信号、Context、路由、多标签容器是否可用。</p>
+  <div id="out">running…</div>
+
+  <!-- 与 index.html 相同的 importmap 来源；本地可切到 ./importmap.json -->
+  <script type="importmap" src="./importmap.json"></script>
+  <script type="module">
+    const out = document.getElementById('out');
+    let ok = 0, bad = 0;
+    const line = (s, good) => { ok += good ? 1 : 0; bad += good ? 0 : 1;
+      out.innerHTML += `\n<span class="${good ? 'ok' : 'bad'}">${good ? '✓' : '✗'} ${s}</span>`; };
+
+    try {
+      const { signal, computed, SignalWatcher } = await import('@lit-labs/signals');
+      line('@lit-labs/signals 解析', !!signal && !!computed && !!SignalWatcher);
+      const { provide, createContext, ContextConsumer } = await import('@lit/context');
+      line('@lit/context 解析', !!provide && !!createContext && !!ContextConsumer);
+      const { Router } = await import('@lit-labs/router');
+      line('@lit-labs/router 解析', !!Router);
+      const { LitElement, html } = await import('lit');
+      line('lit 解析', !!LitElement && !!html);
+
+      // 信号响应
+      const n = signal(0); const dbl = computed(() => n.get() * 2);
+      n.set(21); line('signal/computed 生效', dbl.get() === 42);
+
+      // 应用模块（含 Signal/Context 用法）
+      const { authService } = await import('./modules/auth/auth-service.js');
+      const { userService } = await import('./modules/user/user-service.js');
+      const { tabsService } = await import('./services/tabs-service.js');
+      authService.login('自检'); line('authService 登录', authService.isLoggedIn.get() === true);
+      authService.logout();
+      line('userService 读取', userService.users.get().length === 3);
+      tabsService.open({ id: '/users', path: '/users', title: '用户列表' });
+      line('tabsService 多标签', tabsService.tabs.get().some((t) => t.id === '/users'));
+
+      // 组件注册
+      await import('./components/app-shell.js');
+      line('自定义元素 <app-shell> 已注册', !!customElements.get('app-shell'));
+      await import('./components/tabs-container.js');
+      line('自定义元素 <tabs-container> 已注册', !!customElements.get('tabs-container'));
+      await import('./modules/user/page-user-list.js');
+      line('自定义元素 <page-user-list> 已注册', !!customElements.get('page-user-list'));
+    } catch (e) {
+      line('异常：' + e.message, false);
+    }
+    out.innerHTML += `\n\n合计：${ok} 通过 / ${bad} 失败`;
+  </script>
+</body>
+</html>
