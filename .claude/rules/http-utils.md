@@ -101,7 +101,7 @@ export const debounce = (fn, ms = 200) => {
 
 | 工具 | 用途 |
 |------|------|
-| `utils/router.js` | `navigate()`（基于 `document.baseURI`，尊重 `<base href>`） |
+| `utils/router.js` | `navigate()` / `href()` / `currentPath()`（把应用内路径拼到 base 的 **pathname** 上；见 [routing-best-practices.md](./routing-best-practices.md)） |
 | `utils/dom.js` | 少量原生 DOM 辅助（慎用，优先 Lit 指令） |
 | `utils/validate.js` | 表单校验纯函数 |
 

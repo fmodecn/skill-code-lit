@@ -75,7 +75,7 @@ OBS_BUCKET=obs://<bucket> bash scripts/deploy.sh my-admin
 
 ```
 lit@3.3.3  lit-html@3.3.3  lit-element@4.2.2  @lit/reactive-element@2.1.2
-@lit/context@1.1.6  @lit-labs/signals@0.3.0  signal-polyfill@0.2.2  @lit-labs/router@0.1.4
+@lit/context@1.1.6  @lit-labs/signals@0.3.0  signal-polyfill@0.2.2
 ```
 
 > `@lit-labs/signals` 依赖 `signal-polyfill`（importmap 需映射，入口 `dist/index.js`）。

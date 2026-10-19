@@ -49,7 +49,7 @@ if (srcRules) {
 } else {
   console.log('\n未找到规则仓，写入内置最小规则集。');
   const minimal = {
-    'lit-no-build.md': `# Lit 无构建前端 · 最小规则\n\n1. 源码即产物：不引入任何打包器。\n2. 依赖由 importmap 指向 FMODE Repose，禁止拷进项目。\n3. **禁用装饰器**（@customElement/@property/@state/@consume）——用 static properties + customElements.define + ContextConsumer。\n4. 分层：组件(渲染)→服务(业务/状态)→工具(纯函数)；组件禁 fetch，服务禁 DOM。\n5. 相对导入必须带 .js 后缀。\n6. 全局状态用 @lit-labs/signals；组件本地状态用 static properties(state:true)。\n7. 子目录部署必须 <base href=\"/<project>/\">。\n8. CDN History 回退：不存在路径 200 返回 index.html，禁 302。\n`,
+    'lit-no-build.md': `# Lit 无构建前端 · 最小规则\n\n1. 源码即产物：不引入任何打包器。\n2. 依赖由 importmap 指向 FMODE Repose，禁止拷进项目。\n3. **禁用装饰器**（@customElement/@property/@state/@consume）——用 static properties + customElements.define + ContextConsumer。\n4. 分层：组件(渲染)→服务(业务/状态)→工具(纯函数)；组件禁 fetch，服务禁 DOM。\n5. 相对导入必须带 .js 后缀。\n6. 全局状态用 @lit-labs/signals；组件本地状态用 static properties(state:true)。\n7. 子目录部署必须 <base href=\"/<project>/\">，且与 OBS 前缀、importmap 前缀三者同源。\n8. 导航一律走 utils/router.js（把应用内路径拼到 base 的 pathname 上）；禁止 new URL(path, baseURI)，子路径部署会丢前缀。\n9. 子路径部署禁用 @lit-labs/router（全局 <a> 拦截 + 未剥前缀 pathname 会污染路由）。\n10. CDN History 回退：不存在路径 200 返回 index.html，禁 302。\n`,
   };
   for (const [name, content] of Object.entries(minimal)) {
     const d = join(destRules, name);
@@ -60,7 +60,7 @@ if (srcRules) {
 
 // CLAUDE.md 片段（追加式，不覆盖已有正文）
 const claudeMd = join(target, 'CLAUDE.md');
-const snippet = `\n## 前端（Lit 原生 ESM 无构建）\n\n本项目前端遵循 \`.claude/rules/\` 下的 Lit 无构建规则：源码即产物、依赖走 importmap、\n分层（组件/服务/工具）、**禁用装饰器**、@lit-labs/signals 响应式、@lit-labs/router History 路由。\n详见 \`.claude/rules/architecture.md\` 与 \`.claude/rules/components.md\`。\n`;
+const snippet = `\n## 前端（Lit 原生 ESM 无构建）\n\n本项目前端遵循 \`.claude/rules/\` 下的 Lit 无构建规则：源码即产物、依赖走 importmap、\n分层（组件/服务/工具）、**禁用装饰器**、@lit-labs/signals 响应式、自写 utils/router.js History 路由（子路径部署禁用 @lit-labs/router）。\n详见 \`.claude/rules/architecture.md\` 与 \`.claude/rules/components.md\`。\n`;
 if (existsSync(claudeMd)) {
   const cur = readFileSync(claudeMd, 'utf8');
   if (!cur.includes('Lit 原生 ESM 无构建')) { writeFileSync(claudeMd, cur + snippet); console.log(`  append ${claudeMd}`); }

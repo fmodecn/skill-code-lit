@@ -15,7 +15,8 @@
   - **Utils（纯 ESM 函数）**：无状态共享工具。
 - **响应式**：`@lit-labs/signals`（细粒度信号）。
 - **DI**：`@lit-labs/context`（组件树注入）。
-- **路由**：`@lit-labs/router`，History 干净 URL（支持微信 OAuth 回调，需 CDN 回退规则）。
+- **路由**：自写 `utils/router.js`，History 干净 URL（支持微信 OAuth 回调，需 CDN 回退规则）。
+  子路径部署**禁用** `@lit-labs/router`（全局 `<a>` 拦截 + 未剥前缀 pathname 会污染路由），见 [routing-best-practices.md](./routing-best-practices.md)。
 
 ## 二、分层职责表（越界即返工）
 

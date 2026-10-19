@@ -32,7 +32,7 @@ tags: [未来飞马, 智能体技能, 超级技能, 开发级, 前端, Lit, WebC
 
 教 AI 用 **无构建 / 无打包 / 纯原生 ESM + Lit 3.x** 的方式开发前端：源码即产物，浏览器直接跑，
 依赖走 **FMODE Repose** 统一托管，业务码走 **OBS + CDN**。分层（组件 / 服务 / 工具）、
-`@lit-labs/signals` 响应式、`@lit/context` 依赖注入、`@lit-labs/router` History 路由、后台多标签 KeepAlive。
+`@lit-labs/signals` 响应式、`@lit/context` 依赖注入、自写 `utils/router.js` History 路由（子路径部署**禁用** `@lit-labs/router`）、后台多标签 KeepAlive。
 
 > 完整规则见 `fmode-code-lit` **规则仓**（本技能随仓发布）。
 > 本技能负责「**初始化 + 生成代码**」，规则仓负责「**规范细则**」。
@@ -120,14 +120,14 @@ bash scripts/deploy.sh <project>   # obsutil 同步 src/ → OBS → CDN 刷新
 | 全局状态 | `@lit-labs/signals` 的 signal + `SignalWatcher` |
 | 组件本地状态 | `static properties`（`state: true`） |
 | 依赖注入 | `@lit/context` 的 `provide()` + `ContextConsumer`（**非** `@lit-labs/context`，已废弃） |
-| 路由 | `@lit-labs/router`，History 干净 URL |
+| 路由 | 自写 `utils/router.js`，History 干净 URL（子路径部署**禁用** `@lit-labs/router`） |
 | 子目录部署 | 必须 `<base href="/<project>/">` |
 
 ## 依赖版本（2026-10 实测可用）
 
 ```
 lit@3.3.3  lit-html@3.3.3  lit-element@4.2.2  @lit/reactive-element@2.1.2
-@lit/context@1.1.6  @lit-labs/signals@0.3.0  signal-polyfill@0.2.2  @lit-labs/router@0.1.4
+@lit/context@1.1.6  @lit-labs/signals@0.3.0  signal-polyfill@0.2.2
 ```
 
 > 注意：`@lit-labs/signals` 依赖 **`signal-polyfill`**，importmap 必须映射它（入口 `dist/index.js`）。

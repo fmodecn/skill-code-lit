@@ -11,6 +11,7 @@
 |--------|------|------|
 | 规则总纲 | [`CLAUDE.md`](./CLAUDE.md) | AI 进入本仓/引用本仓时的第一入口，索引全部规则 |
 | 分层规则 | [`.claude/rules/`](./.claude/rules/) | 架构、目录、组件、服务、DI、路由、多标签、部署、坑位逐篇规范 |
+| **路由实战** | [`.claude/rules/routing-best-practices.md`](./.claude/rules/routing-best-practices.md) | 子路径部署路由最佳实践：base 三处同源 / `new URL` 丢前缀 / 弃用 `@lit-labs/router` / CDN 刷新假成功 / 不能只 curl 验收 |
 | 模块划分 | [`.claude/rules/modules/`](./.claude/rules/modules/) | 功能模块 / 通用能力 / 业务模块 的拆分最佳实践 |
 | 源稿 | [`.claude/_lit-dev-manual.md`](./.claude/_lit-dev-manual.md) | 用户提供的《Lit 原生 ESM 无构建开发最佳实践》原始规范 |
 | 可运行示例 | [`examples/hello-lit/`](./examples/hello-lit/) | 零构建、可直接上 OBS+CDN 的最小多标签后台示例 |
@@ -27,7 +28,7 @@
 - **视图**：Lit 3.x（`LitElement` / `html` / `css` / Shadow DOM）
 - **响应式**：`@lit-labs/signals`（跨组件细粒度信号）
 - **依赖注入**：`@lit-labs/context`（组件树 Context）
-- **路由**：`@lit-labs/router`（History 干净 URL，支持微信 OAuth 回调）
+- **路由**：自写 `utils/router.js`（History 干净 URL，支持微信 OAuth 回调）｜子路径部署**禁用** `@lit-labs/router`
 - **分层**：WebComponent（视图） / Service（状态与业务） / Utils（无状态函数）
 - **部署**：FMODE Repose（依赖仓）+ OBS + CDN（业务托管，History 回退 200）
 

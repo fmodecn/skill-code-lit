@@ -19,13 +19,14 @@
 | 3 | [components.md](./.claude/rules/components.md) | LitElement 组件规范、Shadow DOM、属性/事件、Slot | 写组件 |
 | 4 | [services.md](./.claude/rules/services.md) | Service 分层、Signal 状态、单例、可单测 | 写服务 / 状态 |
 | 5 | [context-di.md](./.claude/rules/context-di.md) | `@lit-labs/context` 令牌与 provide/consume | 做依赖注入 |
-| 6 | [routing.md](./.claude/rules/routing.md) | `@lit-labs/router` History 路由、守卫、404 | 做路由 |
+| 6 | [routing.md](./.claude/rules/routing.md) | History 路由、守卫、404（子路径部署自写 `utils/router.js`） | 做路由 |
 | 7 | [tabs-keepalive.md](./.claude/rules/tabs-keepalive.md) | 后台多标签 + KeepAlive（实例常驻） | 做后台壳 |
 | 8 | [http-utils.md](./.claude/rules/http-utils.md) | 原生 Fetch 封装、token 拦截、错误处理、utils | 写请求 / 工具 |
 | 9 | [deployment.md](./.claude/rules/deployment.md) | FMODE Repose 依赖托管 + OBS+CDN 业务部署 + importmap | 上线 / 配依赖 |
 | 10 | [pitfalls.md](./.claude/rules/pitfalls.md) | CORS / 版本冲突 / 302 陷阱 / base href 等坑位 | 排查问题 |
 | 11 | [modules/](./.claude/rules/modules/) | 功能模块 / 通用能力 / 业务模块 划分最佳实践 | 模块拆分 |
-| 12 | [retrospective.md](./docs/retrospective.md) | 对标 Angular zoneless 的技术复盘 | 理解选型理由 |
+| 12 | [routing-best-practices.md](./.claude/rules/routing-best-practices.md) | **子路径部署路由实战**：base 三处同源 / `new URL` 丢前缀 / 弃用 `@lit-labs/router` / CDN 刷新假成功 / 验收不能只 curl | 做路由 / 子路径部署 / 上线验收 |
+| 13 | [retrospective.md](./docs/retrospective.md) | 对标 Angular zoneless 的技术复盘 | 理解选型理由 |
 
 ## 2. 架构一句话
 
@@ -39,7 +40,7 @@
 | 全局状态 | `@lit-labs/signals` + Service 单例 | 跨组件共享 |
 | 组件本地状态 | Lit `@property` / `@state` | 弹窗、输入框 |
 | 依赖注入 | `@lit-labs/context` | 令牌 + provide/consume |
-| 路由 | `@lit-labs/router` | History 干净 URL |
+| 路由 | 自写 `utils/router.js`（History 干净 URL） | **子路径部署禁用 `@lit-labs/router`**（全局 `<a>` 拦截 + 未剥前缀 pathname 会污染路由）；根部署可选它 |
 | 请求 | 原生 `fetch` 薄封装 | 不引 axios |
 | 持久化 | `localStorage` 薄封装 | 一次性配置 |
 | 部署 | OBS + CDN | 无构建直传 |
@@ -59,10 +60,12 @@
 
 - **依赖** → 同步 npm 原始 ESM 到 **FMODE Repose**（按版本目录化，开 HTTP/2，`.js` 必须 `text/javascript`，CORS 放行业务域名），全业务共享一份公共 importmap。
 - **业务码** → `obsutil` 同步 `src/` 到 OBS（华为云 `obs://www-fmode.cn/<project>/`，南一端点），`public-read`，CDN 指向 `fmode.cn/<project>/`，最后刷新 CDN。
-- **子目录部署必须写 `<base href="/<project>/">`**，否则相对 JS 404。
+- **子目录部署必须写 `<base href="/<project>/">`**，且 `<base href>` == OBS 上传前缀 == importmap 路径前缀（**同一变量派生 + 脚本硬校验**），否则相对 JS 404。
 - **History 回退**：CDN 配置「不存在路径返回 `index.html` 且状态码 **200**」，**严禁 302/301**（否则地址栏被改写、微信 OAuth 回调失败）。
+- **CDN 刷新**：`type:directory` + domain_id 对号入座；SDK 返回的 `refresh_task` 是**字符串**（不是 `.id`），失败须退出非 0（否则**假成功**）。
+- **验收**：不能只 `curl` 首页 200 —— 须跑模块图爬取（200 + `text/javascript`）+ 深链接 200 + **真实浏览器**。
 
-详见 [deployment.md](./.claude/rules/deployment.md)。
+详见 [deployment.md](./.claude/rules/deployment.md) 与 [routing-best-practices.md](./.claude/rules/routing-best-practices.md)。
 
 ## 6. 命名约定（速记）
 

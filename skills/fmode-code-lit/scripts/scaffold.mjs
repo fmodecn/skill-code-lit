@@ -32,7 +32,7 @@ function write(rel, content) {
 
 const DEP_VERSIONS = {
   lit: '3.3.3', 'lit-html': '3.3.3', 'lit-element': '4.2.2', '@lit/reactive-element': '2.1.2',
-  '@lit/context': '1.1.6', '@lit-labs/signals': '0.3.0', 'signal-polyfill': '0.2.2', '@lit-labs/router': '0.1.4',
+  '@lit/context': '1.1.6', '@lit-labs/signals': '0.3.0', 'signal-polyfill': '0.2.2',
 };
 
 console.log(`\n生成 Lit 无构建项目：${target}\n项目名：${project}\n`);
@@ -75,7 +75,6 @@ write('src/importmap.json', JSON.stringify({
     '@lit/context': `/npm/@lit/context/v${DEP_VERSIONS['@lit/context']}/index.js`,
     '@lit-labs/signals': `/npm/@lit-labs/signals/v${DEP_VERSIONS['@lit-labs/signals']}/index.js`,
     'signal-polyfill': `/npm/signal-polyfill/v${DEP_VERSIONS['signal-polyfill']}/dist/index.js`,
-    '@lit-labs/router': `/npm/@lit-labs/router/v${DEP_VERSIONS['@lit-labs/router']}/index.js`,
   },
 }, null, 2) + '\n');
 
@@ -167,36 +166,86 @@ export const http = {
 };
 `);
 
-// utils/router.js
+// utils/router.js —— 子路径部署安全（不要用 new URL(path, baseURI)，会丢部署前缀）
 write('src/utils/router.js', `/**
- * 基于 document.baseURI 的导航，尊重 <base href>。
+ * utils/router.js —— 子路径部署安全的导航（只用 History API，干净 URL）。
+ *
+ * ⚠️ 不要写 new URL(path, document.baseURI) 做导航：path 以 '/' 开头时，
+ *   相对解析会丢掉 base 的路径前缀（/proj/users -> /users），子路径部署刷新即 404。
+ *   正确做法：把应用内路径拼到 base 的 pathname 上再解析。
+ *   详见规则仓 .claude/rules/routing-best-practices.md
  */
+export function basePath() {
+  return new URL(document.baseURI).pathname.replace(/\\/+$/, '');
+}
+export function resolveUrl(path) {
+  const base = basePath();
+  const q = path.indexOf('?'), h = path.indexOf('#');
+  let cut = path.length;
+  if (q !== -1) cut = Math.min(cut, q);
+  if (h !== -1) cut = Math.min(cut, h);
+  let p = path.slice(0, cut);
+  const rest = path.slice(cut);        // 查询串 / hash 原样保留
+  if (!p.startsWith('/')) p = '/' + p;
+  return new URL(base + p + rest, location.origin);
+}
 export function navigate(path, { replace = false } = {}) {
-  const url = new URL(path, document.baseURI);
+  const url = resolveUrl(path);
   if (replace) history.replaceState({}, '', url); else history.pushState({}, '', url);
-  window.dispatchEvent(new PopStateEvent('popstate'));
+  window.dispatchEvent(new PopStateEvent('popstate'));   // History 原生不触发
 }
 export function currentPath() {
-  const base = new URL(document.baseURI).pathname.replace(/\\/$/, '');
-  return location.pathname.replace(base, '') || '/';
+  const base = basePath();
+  let path = location.pathname;
+  if (base && path.startsWith(base)) path = path.slice(base.length);
+  if (!path.startsWith('/')) path = '/' + path;
+  return path.replace(/\\/{2,}/g, '/') || '/';   // 折叠 '//'
 }
+export function currentQuery() {
+  return Object.fromEntries(new URLSearchParams(location.search));
+}
+export function href(path) { return resolveUrl(path); }   // 供真实 <a href>
 `);
 
-// components/app-shell.js
+// components/app-shell.js —— 不用 @lit-labs/router（子路径部署会污染路由状态）
 write('src/components/app-shell.js', `/**
- * 布局壳：侧边菜单 + 路由出口。多标签版本见规则仓 tabs-keepalive.md。
+ * 布局壳：侧边菜单 + 内容出口。多标签版本见规则仓 tabs-keepalive.md。
+ *
+ * ⚠️ 不用 @lit-labs/router：它装全局 <a> 拦截器且用未剥前缀的 location.pathname
+ *   匹配路由，子路径部署下会污染路由状态。改为订阅 popstate + currentPath()。
  */
 import { LitElement, html, css } from 'lit';
-import { Router } from '@lit-labs/router';
+import { currentPath, navigate } from '../utils/router.js';
 import './page-home.js';
+
+const ROUTES = [{ path: '/', tag: 'page-home', title: '首页' }];
 
 export class AppShell extends LitElement {
   static styles = css\`:host{display:block;padding:16px}\`;
-  #router = new Router(this, [
-    { path: '/', render: () => html\`<page-home></page-home>\` },
-    { path: '/*', render: () => html\`<page-home></page-home>\` },
-  ]);
-  render() { return html\`<main>\${this.#router.outlet()}</main>\`; }
+  static properties = { _path: { state: true } };
+
+  #onPop = () => { this._path = currentPath(); };
+
+  connectedCallback() {
+    super.connectedCallback();
+    this._path = currentPath();
+    window.addEventListener('popstate', this.#onPop);
+  }
+  disconnectedCallback() {
+    window.removeEventListener('popstate', this.#onPop);
+    super.disconnectedCallback();
+  }
+
+  render() {
+    const hit = ROUTES.find((r) => r.path === this._path) || ROUTES[ROUTES.length - 1];
+    return html\`
+      <nav>
+        \${ROUTES.map((r) => html\`<button @click=\${() => navigate(r.path)}>\${r.title}</button>\`)}
+      </nav>
+      <main>\${this.#view(hit)}</main>
+    \`;
+  }
+  #view(r) { return document.createElement(r.tag); }
 }
 customElements.define('app-shell', AppShell);
 `);
@@ -229,7 +278,7 @@ write('package.json', JSON.stringify({
   scripts: { serve: 'npx --yes serve src', deploy: 'bash scripts/deploy.sh ' + project },
   devDependencies: {
     lit: '^' + DEP_VERSIONS.lit, '@lit/context': '^' + DEP_VERSIONS['@lit/context'],
-    '@lit-labs/signals': '^' + DEP_VERSIONS['@lit-labs/signals'], '@lit-labs/router': '^' + DEP_VERSIONS['@lit-labs/router'],
+    '@lit-labs/signals': '^' + DEP_VERSIONS['@lit-labs/signals'],
   },
 }, null, 2) + '\n');
 

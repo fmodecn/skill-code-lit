@@ -45,7 +45,7 @@ npx --yes serve src
 
 ```bash
 cd examples/hello-lit
-npm install lit @lit-labs/signals @lit-labs/context @lit-labs/router
+npm install lit @lit-labs/signals @lit-labs/context
 # 把 index.html 的 importmap 换成 ./importmap.json，
 # 并把 importmap.json 的路径指向 ./node_modules/...
 npx serve src
@@ -61,7 +61,7 @@ npx serve src
 - **分层**：`page-user-list` 只读 `userService.users`（signal）+ 转发点击；逻辑在 service。
 - **Signal 响应式**：`SignalWatcher` 组件读 signal 自动重渲染。
 - **Context**：`app.js` 用 `provide(authContext, authService)`；`page-home` 用 `ContextConsumer` 消费。
-- **History 路由**：`navigate()` 基于 `document.baseURI`，干净 URL。
+- **History 路由**：`navigate()` 经 `utils/router.js`（把应用内路径拼到 base 的 pathname 上，子路径部署不丢前缀），干净 URL；不用 `@lit-labs/router`。
 - **多标签 KeepAlive**：切到「用户列表」输入筛选词 → 去详情 → 切回，输入**不丢**（实例常驻）。
 - **无装饰器**：全部用 `static properties` + `customElements.define()`。
 

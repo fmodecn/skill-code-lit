@@ -12,7 +12,6 @@
     "@lit/context": "/npm/@lit/context/v1.1.6/index.js",
     "@lit-labs/context": "/npm/@lit/context/v1.1.6/index.js",
     "@lit-labs/signals": "/npm/@lit-labs/signals/v0.3.0/index.js",
-    "signal-polyfill": "/npm/signal-polyfill/v0.2.2/dist/index.js",
-    "@lit-labs/router": "/npm/@lit-labs/router/v0.1.4/index.js"
+    "signal-polyfill": "/npm/signal-polyfill/v0.2.2/dist/index.js"
   }
 }

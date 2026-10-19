@@ -25,7 +25,7 @@
 | 依赖分发 | 打包进 bundle | Repose 统一托管，一次上传全业务复用 |
 | 组件模型 | 装饰器 + 模板 DSL（框架私有） | **标准 Web Components** + 标准模板字面量 |
 | 样式隔离 | ViewEncapsulation（模拟/Shadow） | **Shadow DOM 原生** |
-| 路由 | `@angular/router` | `@lit-labs/router`（History） |
+| 路由 | `@angular/router` | 自写 `utils/router.js`（History；子路径部署弃用 `@lit-labs/router`） |
 | DI | 框架 DI 容器 | `@lit-labs/context`（轻）或直接 import 单例 |
 | 心智模型 | 框架概念多（模块/组件/指令/管道…） | **浏览器原生 API**，概念少 |
 | 升级成本 | 框架版本强绑定 | 只升级 lit 版本号（改 importmap） |
