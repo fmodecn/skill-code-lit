@@ -1,13 +1,28 @@
 {
-  "name": "fmode-code-lit-rules",
-  "private": true,
+  "name": "skill-code-lit",
+  "version": "1.0.0",
   "type": "module",
-  "description": "fmode-code-lit 规则仓：Lit 原生 ESM 无构建前端开发规范。本仓不含运行时依赖（源码即产物）。",
-  "_comment": "此 package.json 仅用于本地工具链与示例；规则仓本体不被打包。",
+  "description": "fmode-code-lit 规则库：Lit 原生 ESM 无构建前端开发规范（web component / sub-path routing / CDN deployment / no-build）。随 npm 分发，含全局技能与脚手架。",
+  "keywords": ["lit", "web-component", "no-build", "esm", "frontend", "rules", "skill"],
+  "license": "MPL-2.0",
+  "files": [
+    "skills",
+    "docs",
+    "examples",
+    ".claude",
+    "README.md",
+    "CLAUDE.md"
+  ],
+  "exports": {
+    ".": "./CLAUDE.md",
+    "./rules/*": "./.claude/rules/*"
+  },
+  "bin": {
+    "fmode-code-lit": "skills/fmode-code-lit/scripts/install.mjs"
+  },
   "scripts": {
     "smoke": "node skills/fmode-code-lit/scripts/smoke.mjs",
     "install-skill": "node skills/fmode-code-lit/scripts/install.mjs install --force",
     "serve-example": "npx --yes serve examples/hello-lit/src"
-  },
-  "license": "MPL-2.0"
+  }
 }
