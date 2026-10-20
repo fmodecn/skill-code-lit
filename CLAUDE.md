@@ -28,7 +28,7 @@
 | 11 | [modules/](./.claude/rules/modules/) | 功能模块 / 通用能力 / 业务模块 划分最佳实践 | 模块拆分 |
 | 12 | [routing-best-practices.md](./.claude/rules/routing-best-practices.md) | **子路径部署路由实战**：base 三处同源 / `new URL` 丢前缀 / 弃用 `@lit-labs/router` / CDN 刷新假成功 / 验收不能只 curl | 做路由 / 子路径部署 / 上线验收 |
 | 13 | [core-library.md](./.claude/rules/core-library.md) | **核心库（core）**：纯 ESM 零浏览器依赖、只 export 纯逻辑、Node 可测、无构建打包为单文件、版本管理 | 抽逻辑层 / 跨框架复用 / 写库 |
-| 14 | [web-component-library.md](./.claude/rules/web-component-library.md) | **组件库（wc）**：customElements 注册、属性/事件/Slot/`::part`、跨框架用法、依赖 core、样式隔离、无装饰器 | 写 Web Component / 组件跨框架复用 |
+| 14 | [web-component-library.md](./.claude/rules/web-component-library.md) | **组件库（wc）**：**必须用 Lit（LitElement/html/css）实现、禁原生 wc 手写**、customElements 注册、属性/事件/Slot/`::part`、跨框架用法、依赖 core、样式隔离、无装饰器 | 写 Web Component / 组件跨框架复用 |
 | 15 | [retrospective.md](./docs/retrospective.md) | 对标 Angular zoneless 的技术复盘 | 理解选型理由 |
 
 ## 2. 架构一句话
@@ -40,12 +40,18 @@
 ```
 [core] 纯 ESM 逻辑库    不认识 DOM / Lit，Node 可 import 单测
    ▲ import
-[wc]   Web Component 组件库  认识 DOM，不认识业务；跨框架 <my-x> 直接用
+[wc]   组件库（Lit 实现的 Web Component）  认识 DOM，不认识业务；跨框架 <my-x> 直接用
    ▲ import
 [page] Lit 无构建页面    组装 core 与 wc，持有路由 / 布局 / 服务
 ```
 
-**core 不认识 DOM，wc 不认识业务，page 组装一切。** 换框架还想复用逻辑 → 下沉 core；
+**core 不认识 DOM，wc 不认识业务，page 组装一切。**
+
+> ⚠️ **wc = 用 Lit 框架特性实现的标准 Web Component**：组件一律 `extends LitElement` + `html` + `css` + `static properties`。
+> **禁止手写原生 wc**（`extends HTMLElement` / `attachShadow()` / 手写 `observedAttributes`）—— Lit 基于 Web Component 标准，
+> 产物仍是跨框架可用的自定义元素。见 [web-component-library.md 第〇节](./.claude/rules/web-component-library.md)。
+
+换框架还想复用逻辑 → 下沉 core；
 换框架还想复用 UI → 上提 wc；只服务本项目 → 停在 page。
 （`fmode-code-agent` = core；`designer-chat` 组件 = wc；后台页 = page。）
 细则见 [architecture.md 一·五](./.claude/rules/architecture.md)。
@@ -110,6 +116,6 @@
 注入 I/O（`now`/`random`/`transport`）→ `node --test` 单测 → `src/index.js` 单一出口 → semver + Repose 版本目录。
 见 [core-library.md](./.claude/rules/core-library.md)。
 
-**抽 wc（组件库）**：逻辑一律来自 core → `static properties` + `customElements.define()`（**判重**）→
+**抽 wc（组件库）**：**用 Lit 框架特性写**（`extends LitElement` + `html` + `css`，**不手写原生 wc**）→ 逻辑一律来自 core → `static properties` + `customElements.define()`（**判重**）→
 只暴露语义属性 / `composed` 事件 / slot / CSS 变量 + `::part` → 标签加统一前缀 → 在**一个非 Lit 宿主**里冒烟。
 见 [web-component-library.md](./.claude/rules/web-component-library.md)。

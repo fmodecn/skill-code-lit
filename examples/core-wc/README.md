@@ -19,7 +19,7 @@ page/                    [page] 页面层 —— 组合
 test/
   quote.test.js          # core 单测（node:test，不依赖浏览器/jsdom）
 scripts/
-  check.mjs              # 静态体检：core 零 DOM / 无装饰器 / import 后缀 / 注册幂等
+  check.mjs              # 静态体检：core 零 DOM / 无装饰器 / wc 必须用 Lit 实现 / import 后缀 / 注册幂等
 ```
 
 ## 跑起来
@@ -37,8 +37,9 @@ node --test test/*.test.js
 node scripts/check.mjs
 ```
 
-断言四条红线：`core/` 不含 `window`/`document`/`fetch`、`core/` 不 import lit、
-全仓无装饰器、`customElements.define` 均有 `get()` 判重。
+断言五组红线：`core/` 不含 `window`/`document`/`fetch`、`core/` 不 import lit、
+全仓无装饰器、**`wc/` 组件必须用 Lit 实现**（`extends LitElement` + `import 'lit'`，
+无 `extends HTMLElement` / `attachShadow(` / `observedAttributes`）、`customElements.define` 均有 `get()` 判重。
 
 ### 3. 浏览器（页面 + 跨框架）
 
@@ -88,7 +89,9 @@ core 计算结果 / Lit 页面宿主 / 纯 HTML 宿主 / 重复 import 幂等 / 
 
 - **core 零浏览器依赖**：`core/quote.js` 里没有 `window`/`document`/`fetch`，不 import lit；
   `now`/`id` 通过参数注入 → `node --test` 直接断言确定值。
-- **wc 只做接线**：`<quote-calc>` 不自己算钱、不自己 fetch；算钱调 core，网络由宿主注入 `transport`。
+- **wc 只做接线、且用 Lit 写**：`<quote-calc>` 不自己算钱、不自己 fetch；算钱调 core，网络由宿主注入 `transport`。
+  组件本身是 `LitElement`（Lit 框架特性：`static properties` / `html` / `css`），**不是手写原生 wc** ——
+  `plain.html` 里的「原生」只是**宿主**用原生 HTML 挂载它，恰好证明产物是跨框架可用的标准自定义元素。
 - **契约跨框架**：只暴露 `items`/`discount`/`disabled` 属性、`quote-done`/`quote-error` 事件
   （`composed: true` 穿透 Shadow DOM）、`<slot name="title">`、`--qc-accent` 变量。
 - **跨框架运行**：`page/index.html`（Lit 宿主）与 `wc/plain.html`（纯 HTML）用的是**同一个**

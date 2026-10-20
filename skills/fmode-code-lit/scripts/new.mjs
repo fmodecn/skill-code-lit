@@ -128,6 +128,10 @@ export function ${pascal.charAt(0).toLowerCase() + pascal.slice(1)}(items, opts 
   content = `/**
  * ${pascal} —— 组件库（Web Component）：仅浏览器交互，逻辑来自 core。
  *
+ * ⚠️ 必须用 Lit 框架特性实现（extends LitElement + html + css），禁止手写原生 wc
+ *    （extends HTMLElement / attachShadow() / 手写 observedAttributes）。
+ *    Lit 本身基于 Web Component 标准，产物仍是跨框架可用的自定义元素。
+ *
  * 契约：语义属性 + composed 事件 + slot + CSS 变量 + ::part
  * 无装饰器：static properties + customElements.define（判重）
  * 规则：见 .claude/rules/web-component-library.md

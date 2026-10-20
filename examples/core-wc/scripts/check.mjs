@@ -2,10 +2,12 @@
 /**
  * scripts/check.mjs —— examples/core-wc 静态体检。
  *
- * 断言三件事（对应规则仓 core-library / web-component-library 的红线）：
+ * 断言五件事（对应规则仓 core-library / web-component-library 的红线）：
  *  1. core/ 零浏览器依赖、不 import lit；
  *  2. wc/ 无装饰器；
- *  3. 全仓 .js 语法通过 + 相对 import 都带 .js。
+ *  3. wc/ 组件必须用 Lit 实现（extends LitElement + import 'lit'，禁原生 wc 手写）；
+ *  4. 全仓 .js 语法通过 + 相对 import 都带 .js；
+ *  5. customElements.define 注册幂等。
  *
  * 用法：node scripts/check.mjs
  */
@@ -38,9 +40,14 @@ const files = walk(root);
 function strip(src) {
   return src
     .replace(/\/\*[\s\S]*?\*\//g, '')      // 块注释
-    .replace(/(^|[^:])\/\/[^\n]*/g, '$1')  // 行注释（避开 https://）
-    .replace(/'(?:[^'\\]|\\.)*'/g, "''")   // 单引号串
-    .replace(/"(?:[^"\\]|\\.)*"/g, '""');  // 双引号串
+    .replace(/(^|[^:])\/\/[^\n]*/g, '$1'); // 行注释（避开 https://）
+}
+
+/** 只去掉注释（保留字符串），用于「是否 import 某包」这类**看字面量**的判定。 */
+function stripComments(src) {
+  return src
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/(^|[^:])\/\/[^\n]*/g, '$1');
 }
 
 // 1. core 零浏览器依赖
@@ -63,7 +70,38 @@ const DECORATOR = /^\s*@(customElement|property|state|consume|provide|query|quer
 const decoHits = files.filter((f) => DECORATOR.test(strip(readFileSync(f, 'utf8'))));
 check('全仓无装饰器语法', decoHits.length === 0, decoHits.join('\n    '));
 
-// 3. 语法 + 相对 import 带 .js
+// 3. wc/ 必须用 Lit 实现（禁原生 Web Component 手写）
+//
+// 判定口径：**注册了自定义元素的文件**就是「组件」，必须用 Lit 框架特性开发。
+// 不渲染 DOM 的纯 I/O 适配器（如 browser-transport.js，不 define）不在此列。
+const NATIVE_WC = [
+  [/\bextends\s+HTMLElement\b/, 'extends HTMLElement（原生 wc）'],
+  [/\battachShadow\s*\(/, 'attachShadow()（手写 Shadow DOM）'],
+  [/\bobservedAttributes\b/, 'observedAttributes（手写属性观察）'],
+  [/\battributeChangedCallback\b/, 'attributeChangedCallback（手写属性观察）'],
+];
+const wcComponentFiles = files.filter((f) => f.includes('/wc/') && /customElements\.define\(/.test(readFileSync(f, 'utf8')));
+check('wc/ 存在注册自定义元素的组件文件', wcComponentFiles.length > 0);
+
+const notLit = wcComponentFiles.filter((f) => !/from\s+['"]lit(-element)?['"]/.test(stripComments(readFileSync(f, 'utf8'))));
+check('wc/ 组件均 import lit', notLit.length === 0,
+  notLit.map((f) => `${f}: 缺少 import { LitElement, html, css } from 'lit'`).join('\n    '));
+
+const notLitElement = wcComponentFiles.filter((f) => !/\bextends\s+LitElement\b/.test(strip(readFileSync(f, 'utf8'))));
+check('wc/ 组件均 extends LitElement', notLitElement.length === 0,
+  notLitElement.map((f) => `${f}: 组件类必须继承 LitElement（见 web-component-library.md 第〇节）`).join('\n    '));
+
+let nativeHits = [];
+for (const f of wcComponentFiles) {
+  const src = strip(readFileSync(f, 'utf8'));
+  for (const [re, label] of NATIVE_WC) {
+    if (re.test(src)) nativeHits.push(`${f}: ${label}`);
+  }
+}
+check('wc/ 组件无原生 wc 写法（extends HTMLElement / attachShadow / observedAttributes）', nativeHits.length === 0,
+  nativeHits.join('\n    '));
+
+// 4. 语法 + 相对 import 带 .js
 let syntaxBad = [];
 const suffixBad = [];
 for (const f of files) {
@@ -85,7 +123,7 @@ for (const f of files) {
 check('全部 .js 通过 node --check', syntaxBad.length === 0, syntaxBad.join('\n    '));
 check('相对 import 带 .js 且裸标识符在 importmap 内', suffixBad.length === 0, suffixBad.join('\n    '));
 
-// 4. 注册幂等
+// 5. 注册幂等
 const defs = files.filter((f) => /customElements\.define\(/.test(readFileSync(f, 'utf8')));
 const guarded = defs.filter((f) => /customElements\.get\(/.test(readFileSync(f, 'utf8')));
 check('customElements.define 均有 get() 判重', defs.length > 0 && defs.length === guarded.length,

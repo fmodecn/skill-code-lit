@@ -12,7 +12,7 @@
 | 规则总纲 | [`CLAUDE.md`](./CLAUDE.md) | AI 进入本仓/引用本仓时的第一入口，索引全部规则 |
 | 分层规则 | [`.claude/rules/`](./.claude/rules/) | 架构、目录、组件、服务、DI、路由、多标签、部署、坑位逐篇规范 |
 | **核心库规范** | [`.claude/rules/core-library.md`](./.claude/rules/core-library.md) | 纯 ESM 核心库：零浏览器依赖 / 只 export 纯逻辑 / Node 可测 / 无构建打包 / 版本管理 |
-| **组件库规范** | [`.claude/rules/web-component-library.md`](./.claude/rules/web-component-library.md) | Web Component 组件库：customElements 注册、属性/事件/Slot、**跨框架**用法、依赖核心库、样式隔离 |
+| **组件库规范** | [`.claude/rules/web-component-library.md`](./.claude/rules/web-component-library.md) | Web Component 组件库（**用 Lit 实现、禁原生 wc 手写**）：customElements 注册、属性/事件/Slot、**跨框架**用法、依赖核心库、样式隔离 |
 | **路由实战** | [`.claude/rules/routing-best-practices.md`](./.claude/rules/routing-best-practices.md) | 子路径部署路由最佳实践：base 三处同源 / `new URL` 丢前缀 / 弃用 `@lit-labs/router` / CDN 刷新假成功 / 不能只 curl 验收 |
 | 模块划分 | [`.claude/rules/modules/`](./.claude/rules/modules/) | 功能模块 / 通用能力 / 业务模块 的拆分最佳实践 |
 | 源稿 | [`.claude/_lit-dev-manual.md`](./.claude/_lit-dev-manual.md) | 用户提供的《Lit 原生 ESM 无构建开发最佳实践》原始规范 |
@@ -32,12 +32,15 @@
 ```
 [core] 纯 ESM 核心库   零浏览器依赖、Node 可测 —— 跨前端框架最底层
    ▲ import
-[wc]   Web Component 组件库   仅浏览器交互、零业务逻辑 —— <my-x> 跨框架直接用
+[wc]   组件库（Lit 实现的 Web Component）   仅浏览器交互、零业务逻辑 —— <my-x> 跨框架直接用
    ▲ import
 [page] Lit 无构建页面   组合 core 与 wc，持有路由 / 布局 / 服务
 ```
 
 **core 不认识 DOM，wc 不认识业务，page 组装一切。**
+
+> **wc 用 Lit 写，不手写原生 wc**：组件一律 `extends LitElement` + `html` + `css`。Lit 本身构建在 Web Component 标准之上，
+> 产出的就是标准自定义元素，所以跨框架复用不受影响；禁止 `extends HTMLElement` / `attachShadow()` 这类原生写法。
 
 | 你想做的事 | 往哪写 | 规则篇 |
 |-----------|--------|--------|

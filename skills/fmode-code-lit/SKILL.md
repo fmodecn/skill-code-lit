@@ -57,7 +57,7 @@ tags: [未来飞马, 智能体技能, 超级技能, 开发级, 前端, Lit, WebC
 ```
 [core] 纯 ESM 核心库   零浏览器依赖、Node 可测 — 跨前端框架最底层
    ▲ import
-[wc]   Web Component 组件库   仅浏览器交互、零业务 — <my-x> 跨框架直接用
+[wc]   组件库（Lit 实现的 Web Component）   仅浏览器交互、零业务 — <my-x> 跨框架直接用
    ▲ import
 [page] Lit 无构建页面   组合 core 与 wc，持有路由/布局/服务
 ```
@@ -71,7 +71,8 @@ tags: [未来飞马, 智能体技能, 超级技能, 开发级, 前端, Lit, WebC
 | 只做本应用的页面 | `src/routes/` | `new.mjs page <name>` | `components.md` |
 
 - **core 铁律**：不 `import lit`、不碰 `window`/`document`/`fetch`；`now`/`id`/`transport` 等不确定输入**注入**；`node --test` 可测。
-- **wc 铁律**：逻辑来自 core；网络由宿主注入 `transport`；只暴露语义属性 + `composed` 事件 + slot + CSS 变量；标签加统一前缀；`customElements.define` **判重**。
+- **wc 铁律**：**必须用 Lit 框架特性写**（`extends LitElement` + `html` + `css`，**禁手写原生 wc**：`extends HTMLElement` / `attachShadow()` / 手写 `observedAttributes`）；逻辑来自 core；网络由宿主注入 `transport`；只暴露语义属性 + `composed` 事件 + slot + CSS 变量；标签加统一前缀；`customElements.define` **判重**。
+  > Lit 本身构建在 Web Component 标准之上，产物即标准自定义元素 → 「用 Lit 写」与「跨框架」不冲突。
 
 
 ## ⚠️ 无构建环境的硬约束（最容易踩）
@@ -141,7 +142,7 @@ bash scripts/deploy.sh <project>   # obsutil 同步 src/ → OBS → CDN 刷新
 | 页面 | `page-*.js`，标签 `<page-*>` |
 | 服务 | `*-service.js`，类 `*Service`，单例 `export const xService = new XService()` |
 | 核心库（core） | `lib/core/*.js`，纯函数/类，**无 `window`/`document`/`fetch`，不 import lit**；入口 `index.js` 单一出口 |
-| 组件库（wc） | `lib/wc/*.js`，`customElements.define`（**判重**），标签带统一前缀；逻辑来自 core |
+| 组件库（wc） | `lib/wc/*.js`，**`extends LitElement`（Lit 实现，禁原生 wc）**，`customElements.define`（**判重**），标签带统一前缀；逻辑来自 core |
 | 相对导入 | **必须带 `.js` 后缀** |
 | 全局状态 | `@lit-labs/signals` 的 signal + `SignalWatcher` |
 | 组件本地状态 | `static properties`（`state: true`） |

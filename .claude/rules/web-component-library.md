@@ -1,4 +1,4 @@
-# Web Component 组件库规范（wc：仅浏览器交互层）
+# Web Component 组件库规范（wc：Lit 实现的浏览器交互层）
 
 > 组件库 = 一批**用 `customElements.define()` 注册的自定义元素**，内部封装 **DOM / 交互 / 样式**，
 > 逻辑**全部来自核心库 [core](./core-library.md)**。产物是标准 Web Component ——
@@ -6,6 +6,25 @@
 >
 > 与页面内组件（[components.md](./components.md)）的区别：页面组件服务于「一个应用」；
 > **组件库组件服务于「多个应用 / 多个框架」**，因此契约更严、实现更克制。
+
+## 零、wc 必须用 Lit 框架特性开发（最重要的一条）
+
+> ⚠️ **本章所有 wc 组件必须用 Lit 框架特性（`LitElement` / `html` / `css` / Shadow DOM / `static properties` /
+> Lit 响应式）开发。禁止手写原生 Web Component。**
+>
+> - **Lit 本身就是 Web Component 的实现层**：`LitElement` 继承自 `ReactiveElement`（再继承 `HTMLElement`），
+>   `html` 产出 Shadow DOM 里的模板，`customElements.define()` 注册的是标准自定义元素。
+>   所以「用 Lit 写」与「产出标准 Web Component、跨框架可用」**不矛盾** —— 前者是实现方式，后者是产物形态。
+> - **✅ 写法**：`class X extends LitElement` + `static properties` + `static styles = css\`\`` + `render() { return html\`\`\` }`。
+> - **❌ 禁止的原生写法**（等价重造 Lit，且丢掉 Lit 的模板缓存 / 属性转换 / 响应式更新）：
+>   - `class X extends HTMLElement`
+>   - `this.attachShadow({ mode: 'open' })` + 手动 `innerHTML` / `document.createElement`
+>   - 手动实现 `observedAttributes` / `attributeChangedCallback` / `connectedCallback` 里刷 DOM
+>   - 字符串拼接模板 + `this.shadowRoot.querySelector(...).textContent = ...`
+> - **「原生」只出现在宿主侧**：`plain.html` 里 `<script type="module">` 直接挂 `<quote-calc>` 是**验证跨框架**的宿主写法，组件本身仍是 Lit。宿主用什么框架，与组件用不用 Lit 无关。
+> - **例外（仅限非 UI 件）**：`browser-transport.js` 这类**不渲染 DOM 的 I/O 适配器**不是组件，可以不 import lit；但只要文件里 `customElements.define()` 注册了元素，就必须是 `LitElement`。
+>
+> `scripts/check.mjs` 对 `wc/` 下每个「注册了自定义元素」的文件做硬校验：必须 import lit、必须 `extends LitElement`、不得出现 `extends HTMLElement` / `attachShadow(` / `observedAttributes`。
 
 ## 一、定位与边界
 
@@ -15,7 +34,7 @@
 | 契约 | 语义属性 / DOM 事件 / slot / CSS 自定义属性，**稳定** | 可随应用演进 |
 | 业务逻辑 | ❌ 一律来自 core，组件只做**接线** | 可在页面 Service 中 |
 | 样式 | Shadow DOM 强隔离，主题走 CSS 变量 | 可宽松 |
-| 依赖 | `core` + `lit`（仅 `LitElement`/`html`/`css`） | `core` + 页面 `services/` |
+| 依赖 | `core` + `lit`（仅 `LitElement`/`html`/`css`；**必须用 Lit，禁原生 wc 手写**） | `core` + 页面 `services/` |
 
 ```
 fmode-code-agent（core，纯 ESM）
@@ -27,7 +46,8 @@ fmode-code-agent（core，纯 ESM）
 
 ## 二、铁律（违反即返工）
 
-1. **无装饰器**：与 [components.md 第〇节](./components.md) 一致，`static properties` + `customElements.define()`。组件库要让**任何无构建页面**直接跑，装饰器会让源码 `SyntaxError`。
+0. **用 Lit 写，不手写原生 wc**：组件类一律 `extends LitElement`，模板用 `html`、样式用 `css`（见第〇节）。禁止 `extends HTMLElement` / 手写 `attachShadow` / 手写 `observedAttributes`。
+1. **无装饰器**：与 [components.md 第〇节](./components.md) 一致，`static properties` + `customElements.define()`。组件库要让**任何无构建页面**直接跑，装饰器会让源码 `SyntaxError`。注意：无装饰器 ≠ 原生 wc —— 仍然用 Lit 的静态字段 API。
 2. **逻辑不进组件**：状态机 / 校验 / 协议都在 core；组件**只**做「DOM 事件 → 调 core → 用结果重渲染」。组件里能单测的逻辑，都应已在 core 里。
 3. **不 import 业务**：组件库不 import 任何应用的 `services/`、`routes/`、业务 model；外部世界只通过**属性**和**事件**进入。
 4. **不直接 `fetch`**：网络由**宿主注入**（见第五节）或由 core 的协议函数描述、宿主执行。
@@ -245,6 +265,7 @@ if (!customElements.get('designer-chat')) customElements.define('designer-chat',
 | 样式隔离 | 宿主页全局 `p { color: red }` **不影响**组件内部；`--dc-accent` 能改主题 |
 | 幂等 | 同名脚本 import 两次不报 `define` 冲突 |
 | 无装饰器 | `node --check` 全过；`grep` 无 `@property` 等 |
+| **Lit 实现** | `grep` 注册元素的文件均 `import ... from 'lit'` 且 `extends LitElement`；无 `extends HTMLElement` / `attachShadow(` / `observedAttributes` |
 
 ## 十、红线清单
 
@@ -256,6 +277,7 @@ if (!customElements.get('designer-chat')) customElements.define('designer-chat',
 - ❌ `customElements.define` 不判重 → 二次加载 `NotSupportedError`
 - ❌ 组件库内置 lit 副本 → 宿主多实例 lit，见 [pitfalls.md](./pitfalls.md)
 - ❌ 装饰器
+- ❌ 手写原生 wc（`extends HTMLElement` / `attachShadow()` / `observedAttributes` / 字符串模板刷 `innerHTML`）→ 必须 `extends LitElement` + `html` + `css`，见第〇节
 
 ## 相关
 
