@@ -1,0 +1,14 @@
+{
+  "name": "core-wc-example",
+  "private": true,
+  "type": "module",
+  "description": "fmode-code-lit 三分层最小示例：core（纯 ESM）+ wc（Web Component）+ page（Lit 页面）",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "check": "node scripts/check.mjs",
+    "serve": "npx --yes serve . -l 3000"
+  },
+  "devDependencies": {
+    "lit": "^3.3.3"
+  }
+}

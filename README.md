@@ -11,16 +11,45 @@
 |--------|------|------|
 | 规则总纲 | [`CLAUDE.md`](./CLAUDE.md) | AI 进入本仓/引用本仓时的第一入口，索引全部规则 |
 | 分层规则 | [`.claude/rules/`](./.claude/rules/) | 架构、目录、组件、服务、DI、路由、多标签、部署、坑位逐篇规范 |
+| **核心库规范** | [`.claude/rules/core-library.md`](./.claude/rules/core-library.md) | 纯 ESM 核心库：零浏览器依赖 / 只 export 纯逻辑 / Node 可测 / 无构建打包 / 版本管理 |
+| **组件库规范** | [`.claude/rules/web-component-library.md`](./.claude/rules/web-component-library.md) | Web Component 组件库：customElements 注册、属性/事件/Slot、**跨框架**用法、依赖核心库、样式隔离 |
 | **路由实战** | [`.claude/rules/routing-best-practices.md`](./.claude/rules/routing-best-practices.md) | 子路径部署路由最佳实践：base 三处同源 / `new URL` 丢前缀 / 弃用 `@lit-labs/router` / CDN 刷新假成功 / 不能只 curl 验收 |
 | 模块划分 | [`.claude/rules/modules/`](./.claude/rules/modules/) | 功能模块 / 通用能力 / 业务模块 的拆分最佳实践 |
 | 源稿 | [`.claude/_lit-dev-manual.md`](./.claude/_lit-dev-manual.md) | 用户提供的《Lit 原生 ESM 无构建开发最佳实践》原始规范 |
-| 可运行示例 | [`examples/hello-lit/`](./examples/hello-lit/) | 零构建、可直接上 OBS+CDN 的最小多标签后台示例 |
+| 可运行示例（页面） | [`examples/hello-lit/`](./examples/hello-lit/) | 零构建、可直接上 OBS+CDN 的最小多标签后台示例 |
+| **可运行示例（三层）** | [`examples/core-wc/`](./examples/core-wc/) | **core 纯 ESM + wc Web Component + page Lit 页面**，含 Node 单测与跨框架（纯 HTML）演示 |
 | 全局技能 | [`skills/fmode-code-lit/`](./skills/fmode-code-lit/) | 给 AI 的 Lit 项目初始化技能（触发词：lit 项目 / 组件 / 无构建前端） |
 | 复盘 | [`docs/retrospective.md`](./docs/retrospective.md) | 纯原生 ESM × Lit 3.x，对标 Angular zoneless |
 
 ## 一句话记住它
 
 > **源码即产物。写完的 `.js` 不需要编译，浏览器原生 ESM 直接跑；依赖走 FMODE Repose 统一托管，业务码走 OBS+CDN，保存刷新即预览。**
+
+## 两个方向：页面 & 库
+
+本仓同时覆盖**两个开发方向**，共用同一套无构建铁律：
+
+```
+[core] 纯 ESM 核心库   零浏览器依赖、Node 可测 —— 跨前端框架最底层
+   ▲ import
+[wc]   Web Component 组件库   仅浏览器交互、零业务逻辑 —— <my-x> 跨框架直接用
+   ▲ import
+[page] Lit 无构建页面   组合 core 与 wc，持有路由 / 布局 / 服务
+```
+
+**core 不认识 DOM，wc 不认识业务，page 组装一切。**
+
+| 你想做的事 | 往哪写 | 规则篇 |
+|-----------|--------|--------|
+| 一段逻辑要在 **Node、浏览器、多个前端框架** 里都能用 | **core** | [core-library.md](./.claude/rules/core-library.md) |
+| 一个 UI 要让 **Lit / Vue / React / 原生 HTML** 都能 `<my-x>` 用 | **wc** | [web-component-library.md](./.claude/rules/web-component-library.md) |
+| 只做**本应用**的页面、路由、布局 | **page** | [components.md](./.claude/rules/components.md) · [architecture.md](./.claude/rules/architecture.md) |
+
+> 例：`fmode-code-agent` 的逻辑层 = **core**（纯 ESM）；`<designer-chat>` = **wc**（组件）；
+> 后台页面 = **page**（组合）。换前端框架时，**core 一行不改**；换 UI 库时，**core 与 wc 都不改**。
+>
+> 别为了分层而分层 —— 只服务本项目时停在 **page** 即可；一旦「换框架还要复用」，逻辑必须下沉 core。
+
 
 ## 技术底座
 

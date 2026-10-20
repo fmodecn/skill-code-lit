@@ -2,6 +2,10 @@
 
 > 组件只做一件事：**把数据渲染成 DOM，并把用户事件转成对 Service 的调用**。
 > 复杂业务逻辑、请求、状态计算 —— 全部下沉到 Service。
+>
+> **本文件讲「页面层组件」**（服务于本应用的 UI）。若这个组件要**跨项目 / 跨框架**复用，
+> 它是**组件库（wc）**，契约更严、逻辑必须来自 [core](./core-library.md) —— 见
+> [web-component-library.md](./web-component-library.md)。分层总图见 [architecture.md 一·五](./architecture.md)。
 
 ## 〇、无构建环境的第一约束：**禁用装饰器**
 
@@ -130,3 +134,20 @@ export class PageDashboard extends SignalWatcher(LitElement) {
 - **用 slot 做内容投影**，不要用 `<... .innerHTML>` 传 HTML。
 - **样式可覆盖**：暴露 CSS 自定义属性（`--card-bg`）而非改内部 class。
 - 通用性强的组件抽到独立目录并考虑托管到 **FMODE Repose 组件库**，跨项目复用。
+
+## 七、从「页内组件」升级为「组件库组件」
+
+同一个组件，跨项目复用时契约要加严。判断与落地：
+
+| 信号 | 动作 |
+|------|------|
+| 第二个项目要引它 / 换框架也要用 | 迁出为**组件库（wc）**，见 [web-component-library.md](./web-component-library.md) |
+| 组件里长出了业务逻辑（校验 / 协议 / 状态机） | 把逻辑**下沉 core**（[core-library.md](./core-library.md)），组件只保留接线 |
+| 组件里出现 `fetch` / 依赖宿主全局变量 | 改成**宿主注入**（`el.transport = ...`），组件库不拥有 I/O |
+| 需要让非 Lit 宿主也能用 | 标签加统一前缀；事件 `composed: true`；只通过 `static properties` + slot + CSS 变量暴露 |
+
+三句话记住三分层：
+
+- **core**：不认识 DOM 的纯逻辑（Node 可测）。
+- **wc**：不认识业务的 Web Component（跨框架）。
+- **page**：组装 core 与 wc 的页面（本文件其余章节讲的就是它）。

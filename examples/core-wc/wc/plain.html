@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>跨框架演示：纯 HTML 直接用 &lt;quote-calc&gt;</title>
+  <base href="/core-wc/wc/" />
+  <!-- 本地开发改用 <script type="importmap" src="../importmap.json"><\/script> -->
+  <script type="importmap" src="/npm/importmap/lit-v3.json"></script>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 24px; background: #f7fafc; }
+    quote-calc { max-width: 420px; --qc-accent: #2f855a; }
+    p.note { color: #718096; max-width: 520px; }
+  </style>
+</head>
+<body>
+  <h1>纯 HTML 宿主（无任何框架）</h1>
+  <p class="note">
+    与本目录外的 Lit 页面用的是**同一个** <code>quote-calc.js</code> 和同一个 core。
+    这里没有 Lit 应用、没有路由、没有构建，只用标准 Web Component。
+  </p>
+
+  <quote-calc discount="0.1">
+    <span slot="title">纯 HTML 里的报价组件</span>
+  </quote-calc>
+
+  <script type="module">
+    import '../wc/index.js';  // 注册 <quote-calc>
+
+    const el = document.querySelector('quote-calc');
+
+    // 复杂值走 property（attribute 只能传字符串）
+    el.items = [
+      { sku: 'PLAIN-01', price: 30, qty: 2 },
+      { sku: 'PLAIN-02', price: 5.5, qty: 4 },
+    ];
+
+    // 宿主可监听语义事件（composed，从 Shadow DOM 穿透出来）
+    el.addEventListener('quote-done', (e) => console.log('quote-done', e.detail));
+    el.addEventListener('quote-error', (e) => console.warn('quote-error', e.detail));
+  </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>core / wc / page 示例 · fmode-code-lit</title>
+
+  <!-- 部署到 <域名>/<prefix>/core-wc/ 时用这个；本地根目录起服务时改用下面的相对版本 -->
+  <base href="/core-wc/page/" />
+
+  <!--
+    公共 importmap（FMODE Repose）。
+    本地开发：把下面一行换成 <script type="importmap" src="../importmap.json"><\/script>
+    注意：importmap 里的路径要么是绝对 /npm/...，要么用 <base> 解析好的相对路径 —— 见 ../importmap.json 注释。
+  -->
+  <script type="importmap" src="/npm/importmap/lit-v3.json"></script>
+
+  <style>
+    :root { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+    body { margin: 0; background: #f7fafc; }
+    app-root { display: block; }
+    /* 页面全局样式不会影响组件内部（Shadow DOM 隔离）；主题只经 CSS 变量 */
+    quote-calc { --qc-accent: #6b46c1; }
+  </style>
+</head>
+<body>
+  <app-root></app-root>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

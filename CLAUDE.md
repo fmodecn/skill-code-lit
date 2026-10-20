@@ -9,6 +9,7 @@
 1. **源码即产物**：不引入任何构建/打包器（rollup / esbuild / vite / webpack）。写好的 `.js` 直接上传 OBS，浏览器原生 ESM 执行。
 2. **依赖不落地项目**：`lit`、`@lit-labs/*` 等运行时依赖一律从 **FMODE Repose** 公共 importmap 引入，**禁止**把依赖源码拷进业务仓、禁止业务仓 `import` 裸 `node_modules`。
 3. **分层不可越界**：组件（渲染）→ 服务（业务与状态）→ 工具（无状态函数）。组件禁止直接 `fetch`、禁止写复杂业务逻辑；服务禁止触碰 DOM。
+   > 跨项目复用时升一级为三分层：**core**（纯 ESM，零 DOM）→ **wc**（Web Component，零业务）→ **page**（组装）。见 [§2.1](#21-分层一句话core--wc--page)。
 
 ## 1. 规则索引
 
@@ -26,11 +27,28 @@
 | 10 | [pitfalls.md](./.claude/rules/pitfalls.md) | CORS / 版本冲突 / 302 陷阱 / base href 等坑位 | 排查问题 |
 | 11 | [modules/](./.claude/rules/modules/) | 功能模块 / 通用能力 / 业务模块 划分最佳实践 | 模块拆分 |
 | 12 | [routing-best-practices.md](./.claude/rules/routing-best-practices.md) | **子路径部署路由实战**：base 三处同源 / `new URL` 丢前缀 / 弃用 `@lit-labs/router` / CDN 刷新假成功 / 验收不能只 curl | 做路由 / 子路径部署 / 上线验收 |
-| 13 | [retrospective.md](./docs/retrospective.md) | 对标 Angular zoneless 的技术复盘 | 理解选型理由 |
+| 13 | [core-library.md](./.claude/rules/core-library.md) | **核心库（core）**：纯 ESM 零浏览器依赖、只 export 纯逻辑、Node 可测、无构建打包为单文件、版本管理 | 抽逻辑层 / 跨框架复用 / 写库 |
+| 14 | [web-component-library.md](./.claude/rules/web-component-library.md) | **组件库（wc）**：customElements 注册、属性/事件/Slot/`::part`、跨框架用法、依赖 core、样式隔离、无装饰器 | 写 Web Component / 组件跨框架复用 |
+| 15 | [retrospective.md](./docs/retrospective.md) | 对标 Angular zoneless 的技术复盘 | 理解选型理由 |
 
 ## 2. 架构一句话
 
 浏览器打开 URL → CDN 回退规则把不存在的路径 **200（非 302）** 返回 `index.html` → `index.html` 加载 **公共 importmap**（指向 FMODE Repose）→ 加载 `app.js` → `import` lit 依赖 → 初始化 Store / 路由 / 根组件 → 渲染。全程**零编译**。
+
+## 2.1 分层一句话（core / wc / page）
+
+```
+[core] 纯 ESM 逻辑库    不认识 DOM / Lit，Node 可 import 单测
+   ▲ import
+[wc]   Web Component 组件库  认识 DOM，不认识业务；跨框架 <my-x> 直接用
+   ▲ import
+[page] Lit 无构建页面    组装 core 与 wc，持有路由 / 布局 / 服务
+```
+
+**core 不认识 DOM，wc 不认识业务，page 组装一切。** 换框架还想复用逻辑 → 下沉 core；
+换框架还想复用 UI → 上提 wc；只服务本项目 → 停在 page。
+（`fmode-code-agent` = core；`designer-chat` 组件 = wc；后台页 = page。）
+细则见 [architecture.md 一·五](./.claude/rules/architecture.md)。
 
 ## 3. 默认技术选型
 
@@ -85,3 +103,13 @@
 6. 部署脚本：`obsutil sync` + CDN refresh
 
 > 具体脚手架：用全局技能 `fmode-code-lit`（`npx fmode-code-lit@latest workspace`）一键生成。
+
+## 8. 写「库」时的动手清单（core / wc）
+
+**抽 core（逻辑层）**：把纯逻辑（状态机 / 校验 / 协议 / 计算）搬到独立包 → `grep` 确认无 `window`/`document`/`fetch`/`lit` →
+注入 I/O（`now`/`random`/`transport`）→ `node --test` 单测 → `src/index.js` 单一出口 → semver + Repose 版本目录。
+见 [core-library.md](./.claude/rules/core-library.md)。
+
+**抽 wc（组件库）**：逻辑一律来自 core → `static properties` + `customElements.define()`（**判重**）→
+只暴露语义属性 / `composed` 事件 / slot / CSS 变量 + `::part` → 标签加统一前缀 → 在**一个非 Lit 宿主**里冒烟。
+见 [web-component-library.md](./.claude/rules/web-component-library.md)。

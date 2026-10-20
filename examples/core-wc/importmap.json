@@ -1,0 +1,16 @@
+{
+  "_comment": "本地开发用 importmap（与 examples/hello-lit/src/importmap.json 版本一致）。生产由 FMODE Repose 的 /npm/importmap/lit-v3.json 提供。用 npx serve examples/core-wc 起服务后，页面里的 src 改成指向本文件（见 README）。",
+  "imports": {
+    "lit": "/npm/lit/v3.3.3/lit.js",
+    "lit/": "/npm/lit/v3.3.3/",
+    "lit-html": "/npm/lit-html/v3.3.3/lit-html.js",
+    "lit-html/": "/npm/lit-html/v3.3.3/",
+    "lit-element": "/npm/lit-element/v4.2.2/lit-element.js",
+    "lit-element/": "/npm/lit-element/v4.2.2/",
+    "@lit/reactive-element": "/npm/@lit/reactive-element/v2.1.2/reactive-element.js",
+    "@lit/reactive-element/": "/npm/@lit/reactive-element/v2.1.2/",
+    "@lit/context": "/npm/@lit/context/v1.1.6/index.js",
+    "@lit-labs/signals": "/npm/@lit-labs/signals/v0.3.0/index.js",
+    "signal-polyfill": "/npm/signal-polyfill/v0.2.2/dist/index.js"
+  }
+}

@@ -1,7 +1,7 @@
 ---
 name: fmode-code-lit
-description: "用 Lit 原生 ESM 无构建方式写前端（零编译/零打包/浏览器直跑）。触发词：lit 项目、lit 组件、WebComponent、无构建前端、原生 ESM、importmap、@lit-labs/signals、@lit-labs/context、多标签 KeepAlive、FMODE OBS+CDN 前端部署。适用场景：(1) 新建 lit 无构建项目并生成目录/importmap/骨架 (2) 写 LitElement 组件/Service/路由 (3) 给已有项目补齐前端开发规则 (.claude/rules) (4) 部署到 OBS+CDN 并配 History 回退。产出遵循 fmode-code-lit 规则仓的分层与命名规范。"
-description_en: "Build front-ends the Lit native-ESM no-build way (zero compile, zero bundling, runs directly in the browser). Triggers: lit project, lit component, WebComponent, no-build frontend, native ESM, importmap, @lit-labs/signals, @lit-labs/context, multi-tab keep-alive, FMODE OBS+CDN front-end deploy. Use for: (1) scaffolding a new lit no-build project with dirs/importmap/skeleton, (2) writing LitElement components/services/routing, (3) adding front-end dev rules (.claude/rules) to an existing project, (4) deploying to OBS+CDN with History fallback. Output follows the fmode-code-lit rules repo's layering and naming conventions."
+description: "用 Lit 原生 ESM 无构建方式写前端（零编译/零打包/浏览器直跑）。触发词：lit 项目、lit 组件、WebComponent、Web Component 组件库、纯 ESM 核心库、跨框架组件、无构建前端、原生 ESM、importmap、@lit-labs/signals、@lit-labs/context、多标签 KeepAlive、FMODE OBS+CDN 前端部署。适用场景：(1) 新建 lit 无构建项目并生成目录/importmap/骨架 (2) 写 LitElement 组件/Service/路由 (3) 把逻辑层抽成纯 ESM 核心库（core，零浏览器依赖、Node 可测）或把交互层做成跨框架 Web Component 组件库（wc） (4) 给已有项目补齐前端开发规则 (.claude/rules) (5) 部署到 OBS+CDN 并配 History 回退。产出遵循 fmode-code-lit 规则仓的分层与命名规范。"
+description_en: "Build front-ends the Lit native-ESM no-build way (zero compile, zero bundling, runs directly in the browser). Triggers: lit project, lit component, WebComponent, web component library, pure-ESM core library, cross-framework components, no-build frontend, native ESM, importmap, @lit-labs/signals, @lit-labs/context, multi-tab keep-alive, FMODE OBS+CDN front-end deploy. Use for: (1) scaffolding a new lit no-build project with dirs/importmap/skeleton, (2) writing LitElement components/services/routing, (3) extracting a pure-ESM core library (zero DOM, Node-testable) or a cross-framework Web Component library (wc), (4) adding front-end dev rules (.claude/rules) to an existing project, (5) deploying to OBS+CDN with History fallback. Output follows the fmode-code-lit rules repo's layering and naming conventions."
 schema_version: 1.0.0
 level: system
 category: development
@@ -52,6 +52,28 @@ tags: [未来飞马, 智能体技能, 超级技能, 开发级, 前端, Lit, WebC
 2. **依赖不落地项目**：`lit`、`@lit/*`、`@lit-labs/*` 由 **importmap** 指向 FMODE Repose，禁止把依赖拷进业务仓。
 3. **分层不越界**：组件→服务→工具。组件禁 `fetch`/复杂业务；服务禁 DOM。
 
+## 两个方向：页面 & 库（同一套铁律）
+
+```
+[core] 纯 ESM 核心库   零浏览器依赖、Node 可测 — 跨前端框架最底层
+   ▲ import
+[wc]   Web Component 组件库   仅浏览器交互、零业务 — <my-x> 跨框架直接用
+   ▲ import
+[page] Lit 无构建页面   组合 core 与 wc，持有路由/布局/服务
+```
+
+**core 不认识 DOM，wc 不认识业务，page 组装一切。**
+
+| 需求 | 写在哪 | 生成命令 | 规则篇 |
+|------|--------|----------|--------|
+| 逻辑要在 Node + 多框架复用 | `lib/core/` | `new.mjs core <name>` | `core-library.md` |
+| UI 要跨框架（Lit/Vue/React/原生） | `lib/wc/` | `new.mjs wc <name>` | `web-component-library.md` |
+| 只做本应用的页面 | `src/routes/` | `new.mjs page <name>` | `components.md` |
+
+- **core 铁律**：不 `import lit`、不碰 `window`/`document`/`fetch`；`now`/`id`/`transport` 等不确定输入**注入**；`node --test` 可测。
+- **wc 铁律**：逻辑来自 core；网络由宿主注入 `transport`；只暴露语义属性 + `composed` 事件 + slot + CSS 变量；标签加统一前缀；`customElements.define` **判重**。
+
+
 ## ⚠️ 无构建环境的硬约束（最容易踩）
 
 **禁用一切装饰器语法**：`@customElement` / `@property` / `@state` / `@consume` / `@provide` / `@query`。
@@ -95,12 +117,14 @@ my-admin/
 node <skill_dir>/scripts/install-rules.mjs .      # 写入 ./.claude/rules/ + CLAUDE.md 片段
 ```
 
-### 3) 生成单个组件 / 服务
+### 3) 生成单个组件 / 服务 / 核心库模块 / 组件库组件
 
 ```bash
-node <skill_dir>/scripts/new.mjs component user-card
-node <skill_dir>/scripts/new.mjs service auth-service
-node <skill_dir>/scripts/new.mjs page page-order-list
+node <skill_dir>/scripts/new.mjs component user-card      # 页内通用组件
+node <skill_dir>/scripts/new.mjs service auth-service     # 页面服务
+node <skill_dir>/scripts/new.mjs page page-order-list     # 页面
+node <skill_dir>/scripts/new.mjs core pricing             # 核心库模块（纯 ESM，零 DOM）
+node <skill_dir>/scripts/new.mjs wc quote-calc            # Web Component（跨框架组件库）
 ```
 
 ### 4) 部署
@@ -116,6 +140,8 @@ bash scripts/deploy.sh <project>   # obsutil 同步 src/ → OBS → CDN 刷新
 | 组件文件 | `kebab-case.js`，类 `PascalCase`，标签含连字符 |
 | 页面 | `page-*.js`，标签 `<page-*>` |
 | 服务 | `*-service.js`，类 `*Service`，单例 `export const xService = new XService()` |
+| 核心库（core） | `lib/core/*.js`，纯函数/类，**无 `window`/`document`/`fetch`，不 import lit**；入口 `index.js` 单一出口 |
+| 组件库（wc） | `lib/wc/*.js`，`customElements.define`（**判重**），标签带统一前缀；逻辑来自 core |
 | 相对导入 | **必须带 `.js` 后缀** |
 | 全局状态 | `@lit-labs/signals` 的 signal + `SignalWatcher` |
 | 组件本地状态 | `static properties`（`state: true`） |

@@ -18,6 +18,38 @@
 - **路由**：自写 `utils/router.js`，History 干净 URL（支持微信 OAuth 回调，需 CDN 回退规则）。
   子路径部署**禁用** `@lit-labs/router`（全局 `<a>` 拦截 + 未剥前缀 pathname 会污染路由），见 [routing-best-practices.md](./routing-best-practices.md)。
 
+### 一·五、双方向分层：core / wc / page（新增）
+
+上面的「组件 / 服务 / 工具」讲的是**一个应用内部**怎么分。本仓还支持**跨应用复用**的两个方向，
+二者是**同一套无构建铁律**在不同尺度上的应用：
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ [page] 页面层   Lit 无构建页面（本应用）                              │
+│   组合 <my-x> 与页内组件；路由 / 多标签 / 布局只在页面层              │
+│      ▲ import                                                        │
+│ [wc]   组件库   Web Component（仅浏览器交互：DOM / 事件 / Shadow DOM） │
+│   一批 customElements；跨框架（Lit/Vue/React/原生）直接 <my-x> 使用   │
+│      ▲ import                                                        │
+│ [core] 核心库   纯 ESM 逻辑（零浏览器依赖，Node 可 import 单测）        │
+│   纯函数 / 类 / 状态机；不 import Lit、不碰 window/document/fetch      │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+| 层 | 产物 | 依赖 | 规则篇 |
+|----|------|------|--------|
+| **core** | npm ESM 包（可跑 Node） | 只依赖 `node:*` 与纯 JS 库（`@lit-labs/signals` 可用） | [core-library.md](./core-library.md) |
+| **wc** | 一批自定义元素（浏览器） | `core` + `lit`（仅渲染 API） | [web-component-library.md](./web-component-library.md) |
+| **page** | 一个应用的 `src/`（浏览器） | `wc` / `core` + 页面 `services/` `utils/` | [components.md](./components.md) |
+
+**对应实例**：`fmode-code-agent` = **core**（逻辑层纯 ESM）；`designer-chat` 组件 = **wc**；
+任意后台页 = **page**（组合 wc，并可只用页内组件而不用组件库）。
+
+> 什么时候只需两层：只服务本项目、组件不复用 → **只有 page + 内联的 services/utils** 就够（最常见）。
+> 一旦出现「换一个框架还想复用这段逻辑」→ 下沉为 **core**；「换一个框架还想复用这个 UI」→ 上提为 **wc**。
+> 别为了分层而分层，但**一旦跨框架复用，core 必须零 DOM 依赖**，否则复用不成立。
+
+
 ## 二、分层职责表（越界即返工）
 
 | 层 | 目录 | 允许 | 禁止 |
@@ -27,6 +59,10 @@
 | 工具 | `utils/` | 纯无状态函数、通用封装（http/storage/format） | 持有可变全局状态、依赖上面两层 |
 
 > 判定口诀：**能被单测、不 import Lit 的，就不是组件**。服务必须能在 Node 里 `import` 后直接跑。
+
+> 三分层版的口诀（见 [一·五](#一五分方向分层core--wc--page新增)）：
+> **core 不认识 DOM，wc 不认识业务，page 组装一切。** service 若连 `localStorage` / `fetch` 都想抽走，就成 core；
+> 若沾 DOM，就留在 page。
 
 ## 三、运行流程
 
@@ -65,3 +101,5 @@
 - 通用弹窗 / 表格 / 表单 WebComponent → 内部组件库，托管 FMODE Repose。
 - 路由守卫鉴权。
 - 全局 loading / 消息提示组件 + 全局 Signal 控制。
+- **逻辑层抽成 core 库**（纯 ESM、零 DOM）→ 同一套逻辑喂给 Lit / Vue / React 多套 UI，见 [core-library.md](./core-library.md)。
+- **组件库升级为跨框架分发**（wc 层）→ 非 Lit 宿主也能 `<my-x>`，见 [web-component-library.md](./web-component-library.md)。
