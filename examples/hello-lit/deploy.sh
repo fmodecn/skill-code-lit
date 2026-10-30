@@ -6,9 +6,9 @@
 set -euo pipefail
 
 PROJECT="${1:-hello-lit}"
-BUCKET="${OBS_BUCKET:?需设置 OBS_BUCKET，例如 obs://www-fmode.cn}"
-EP="${OBS_ENDPOINT:-obs.cn-south-1.myhuaweicloud.com}"
-OBS="${OBSUTIL:-/opt/data/bin/obsutil}"
+BUCKET="${OBS_BUCKET:?需设置 OBS_BUCKET，例如 obs://my-bucket}"
+EP="${OBS_ENDPOINT:-obs.<region>.myhuaweicloud.com}"
+OBS="${OBSUTIL:-obsutil}"
 SRC="$(cd "$(dirname "$0")" && pwd)/src"
 
 echo "==> 同步 $SRC -> $BUCKET/$PROJECT/"

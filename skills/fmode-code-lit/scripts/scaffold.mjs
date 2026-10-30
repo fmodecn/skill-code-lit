@@ -288,8 +288,8 @@ write('scripts/deploy.sh', `#!/usr/bin/env bash
 set -euo pipefail
 PROJECT="\${1:-${project}}"
 BUCKET="\${OBS_BUCKET:?需设置 OBS_BUCKET}"
-EP="\${OBS_ENDPOINT:-obs.cn-south-1.myhuaweicloud.com}"
-OBS="\${OBSUTIL:-/opt/data/bin/obsutil}"
+EP="\${OBS_ENDPOINT:-obs.<region>.myhuaweicloud.com}"
+OBS="\${OBSUTIL:-obsutil}"
 SRC="$(cd "$(dirname "$0")/.." && pwd)/src"
 "$OBS" rm "$BUCKET/$PROJECT/index.html" -e="$EP" -f >/dev/null 2>&1 || true
 "$OBS" cp "$SRC/index.html" "$BUCKET/$PROJECT/index.html" -e="$EP" -acl=public-read -f \\

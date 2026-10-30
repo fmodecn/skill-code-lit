@@ -48,7 +48,7 @@ node scripts/check.mjs
 ```bash
 # 方式 A：指向 FMODE Repose（内网可达）
 #   index.html / plain.html 保持 <script type="importmap" src="/npm/importmap/lit-v3.json">
-cd /opt/data/git-repos/fmode-code-lit
+cd path/to/fmode-code-lit
 npx --yes serve examples -l 3000
 # 打开 http://localhost:3000/core-wc/page/index.html   （Lit 页面）
 # 打开 http://localhost:3000/core-wc/wc/plain.html     （纯 HTML 宿主）

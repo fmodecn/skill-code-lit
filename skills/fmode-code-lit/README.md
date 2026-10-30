@@ -1,5 +1,8 @@
 # fmode-code-lit · Lit 原生 ESM 无构建前端技能
 
+> **这是方便数字人（FmodeAgent / FmodeCode）进行项目开发的基础规则技能。**
+> 它把踩过的坑沉淀成硬性约束，让 AI 在生成代码时不重犯同类错误。
+
 > **未来飞马 — 让 AI 进化提前发生，让 AI 落地快人一步**
 
 [![License: MPL-2.0](https://img.shields.io/badge/License-MPL--2.0-brightgreen.svg)](LICENSE)
@@ -30,28 +33,28 @@
 
 ```bash
 # 装到当前项目的 .claude/skills/（随项目走，推荐）
-npx --yes fmode-code-lit@latest workspace
+npx --yes @fmode/skill-code-lit@latest workspace
 
 # 或装到用户级 ~/.claude/skills/（全局）
-npx --yes fmode-code-lit@latest install
+npx --yes @fmode/skill-code-lit@latest install
 
 # 把前端规则写入项目 ./.claude/rules/
-npx --yes fmode-code-lit@latest rules .
+npx --yes @fmode/skill-code-lit@latest rules .
 ```
 
 ### 2) 新建无构建 Lit 项目
 
 ```bash
-npx --yes fmode-code-lit@latest scaffold ./my-admin --project my-admin
+npx --yes @fmode/skill-code-lit@latest scaffold ./my-admin --project my-admin
 cd my-admin && npx serve src      # 本地预览
 ```
 
 ### 3) 生成组件 / 服务 / 页面
 
 ```bash
-npx --yes fmode-code-lit@latest new component user-card
-npx --yes fmode-code-lit@latest new service auth-service
-npx --yes fmode-code-lit@latest new page page-order-list
+npx --yes @fmode/skill-code-lit@latest new component user-card
+npx --yes @fmode/skill-code-lit@latest new service auth-service
+npx --yes @fmode/skill-code-lit@latest new page page-order-list
 ```
 
 ### 4) 部署

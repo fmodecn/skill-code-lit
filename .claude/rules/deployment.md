@@ -1,6 +1,6 @@
 # 部署规范（FMODE Repose + OBS/CDN）
 
-> 本仓为 **private**。本篇含内部部署细节，**禁止**复制到对外文档 / 开源材料 / 公开仓库。
+> 本篇含内部部署细节，**禁止**复制到对外文档 / 开源材料 / 公开仓库（本仓对外以「开源前已脱敏」版本发布）。
 > 无论对内对外，**AK/SK 密钥一律不写进任何文档或代码**，只从既有部署脚本引用。
 
 ## 一、两条托管线
@@ -76,14 +76,14 @@
 
 **上传（obsutil）**
 
-- 工具：`/opt/data/bin/obsutil`
+- 工具：`obsutil`（华为云官方 CLI，安装路径按各自环境而定）
 - 桶（bucket）与端点、AK/SK：**从既有部署脚本引用**（如 `fmode-app/scripts/deploy.sh`），**禁止**写入本仓文档/代码。
 - 典型命令形态：
 
 ```bash
 # 同步业务源码到 OBS 前缀，公开读
 obsutil sync ./src/ obs://<bucket>/<project>/ \
-  -e=obs.cn-south-1.myhuaweicloud.com -acl=public-read -f
+  -e=obs.<region>.myhuaweicloud.com -acl=public-read -f
 ```
 
 - **index.html 先删后传**：`sync` 按 size+mtime 判 Skip，`index.html` 名字固定、内容随发布变化，需先 `rm` 再 `cp`，避免被 Skip。
@@ -137,10 +137,10 @@ obsutil sync ./src/ obs://<bucket>/<project>/ \
 # scripts/deploy.sh —— 无构建，直接同步 src/ 到 OBS，再刷 CDN
 set -euo pipefail
 PROJECT="${1:?usage: deploy.sh <project>}"
-BUCKET="${OBS_BUCKET:?set OBS_BUCKET}"           # 例: obs://www-fmode.cn
+BUCKET="${OBS_BUCKET:?set OBS_BUCKET}"           # 例: obs://my-bucket
 PREFIX="$PROJECT"
-EP="obs.cn-south-1.myhuaweicloud.com"
-OBS=/opt/data/bin/obsutil
+EP="${OBS_ENDPOINT:?set OBS_ENDPOINT}"           # 例: obs.<region>.myhuaweicloud.com
+OBS="${OBSUTIL:-obsutil}"
 
 # 1) index.html 先删后传（防 Skip）+ no-cache
 "$OBS" rm "$BUCKET/$PREFIX/index.html" -e="$EP" -f >/dev/null 2>&1 || true

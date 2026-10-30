@@ -172,6 +172,62 @@ lit@3.3.3  lit-html@3.3.3  lit-element@4.2.2  @lit/reactive-element@2.1.2
 装饰器 / CORS / MIME 非 JS / lit 多版本混用 / CDN 302 / base href 缺失 / 相对 import 漏 `.js` /
 signal 与 property 混用 / 老浏览器无 Import Map / 循环依赖。
 
+## 多页面开发铁律（light DOM 五条死线）
+
+> 来源：一次多页看板首次交付 6 页全部错乱的复盘（2026-10-29）
+> **一句话**：`createRenderRoot(){return this}` 不是「让 Tailwind 生效的小开关」，是**渲染模型切换**。切完以后 `<slot>`、`:host`、`::slotted`、样式隔离全部失效，但代码看起来和普通 Lit 一样、编辑器也不报错。
+
+### 死线1：light DOM 下禁用 `<slot>`
+没有 shadow root 就没有投影。`<slot>` 退化成普通未知元素，`assignedSlot` 为 null，**子节点原封不动滞留在宿主元素上**——外壳和内容成了兄弟节点，谁也没包住谁，于是滚动区空、导航错、高度链断。
+**自检一行**：`document.querySelector('main').children.length`，为 0 就是投影断了。
+
+### 死线2：外壳接管路由渲染，不靠投影传内容
+页面元素由外壳**自己按路由产出**，让它天然成为 `<main>` 的子节点，父子关系由渲染函数保证：
+```js
+// app-shell.js
+_renderRoute() {
+  const { name, params } = parseRoute(this.path);
+  switch (name) {
+    case 'dashboard': return html`<page-dashboard></page-dashboard>`;
+    case 'project-detail': return html`<page-project-detail .code=${params.code||''}></page-project-detail>`;
+  }
+}
+// render 里：<main ...><div class="page-enter key-route-${this.active}">${this._renderRoute()}</div></main>
+```
+`app-root` 退化成只负责挂载：`render() { return html\`<app-shell></app-shell>\` }`。
+
+### 死线3：真需传内容的组件（卡片），用 capture/project 手动搬
+light DOM 下只能自己搬节点。现成实现见 `references/light-slot.js`。**顺序不能错**：
+- `capture(host)` 在 **connectedCallback 中、渲染前** 调用，把 `childNodes` 存到 `host.__lightIncoming`
+- `project(host)` 在 **updated() 中、渲染后** 调用，把暂存的节点塞进 `[data-light-slot="body"]` 等容器
+- **必须靠 `dataset.projected` 做幂等**，否则每次重渲染都重复搬、节点来回跳
+- 渲染后再扫宿主子节点是致命的：会把组件自己刚生成的内容当成「外部传入」搬走，越搬越乱
+
+### 死线4：自定义元素必须显式 `display: block; min-width: 0`
+自定义元素是未知元素，浏览器默认按 inline 处理：不吃 height/width（`h-full`/`flex-1` 全失效）、不形成块级盒子（内部 flex/grid 失去参照）、相邻元素间出现空白间隙。
+```css
+app-shell, page-dashboard, page-analysis, data-table, kpi-card, empty-state, ... {
+  display: block; min-width: 0;   /* min-width:0 让 flex 子项可收缩，否则长表格撑破父容器 */
+}
+```
+**两个例外必须排除**：`section-card`、`chart-box` 的 class 自带 `flex h-full flex-col`，写死 `display: block` 会覆盖掉、把高度链断掉。
+
+### 死线5：图表容器用 `height:100% + min-height`，不用 `flex:1`
+```css
+chart-box { height: 100%; min-height: 260px; }   /* 父级无确定高度时 flex:1 算出来是 0，ECharts 拿到 0 高度直接不画 */
+```
+
+### 交付前自检清单
+1. **先跑通最小路径再铺量**：外壳 + 一个空白页 + 一次路由跳转，确认 DOM 父子关系正确，再往里填 6 个页面。规模越大定位成本越高。
+2. `node scripts/check-elements.mjs` 自动校验所有自定义元素都声明了 display —— 自动检查比文档写三遍有用。
+3. 长模板用 `node --check` 检查语法：**少一个闭标签，lit-html 会把后面所有兄弟节点当成它的子节点吞掉**，整页塌陷，且症状和渲染模型错误混在一起，排查方向严重跑偏。
+4. 症状≠根因：“样式全乱”先去查 DOM 结构，别一上来翻 Tailwind 配置（这次查错方向错了两轮）。
+5. **多页症状不一致时先找共同根因**：各页症状不同通常是同一个总根因的不同投影，不是 n 个独立 bug。最严重的那页反而最好的线索。
+
+### 同批高频白屏（非 Lit 问题，但一起记）
+- **子路径白屏**：index.html 用绝对路径引资源，部署到 `/dev/XXX/` 子路径全 404。用 `__BASE__` 占位 + `document.write` 注入。
+- **改配置后白屏**：dev-server 进程还服务旧配置。**改配置必须重启，别信热更新。**
+
 ## 诚实失败
 
 生成前先探测目标目录；已存在文件**不覆盖**（除非 `--force`）。若依赖版本无法从 Repose 解析，

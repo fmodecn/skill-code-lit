@@ -83,7 +83,7 @@
 ## 5. 部署速查
 
 - **依赖** → 同步 npm 原始 ESM 到 **FMODE Repose**（按版本目录化，开 HTTP/2，`.js` 必须 `text/javascript`，CORS 放行业务域名），全业务共享一份公共 importmap。
-- **业务码** → `obsutil` 同步 `src/` 到 OBS（华为云 `obs://www-fmode.cn/<project>/`，南一端点），`public-read`，CDN 指向 `fmode.cn/<project>/`，最后刷新 CDN。
+- **业务码** → `obsutil` 同步 `src/` 到 OBS（`obs://<bucket>/<project>/`，端点按环境配置），`public-read`，CDN 指向业务域名，最后刷新 CDN。
 - **子目录部署必须写 `<base href="/<project>/">`**，且 `<base href>` == OBS 上传前缀 == importmap 路径前缀（**同一变量派生 + 脚本硬校验**），否则相对 JS 404。
 - **History 回退**：CDN 配置「不存在路径返回 `index.html` 且状态码 **200**」，**严禁 302/301**（否则地址栏被改写、微信 OAuth 回调失败）。
 - **CDN 刷新**：`type:directory` + domain_id 对号入座；SDK 返回的 `refresh_task` 是**字符串**（不是 `.id`），失败须退出非 0（否则**假成功**）。

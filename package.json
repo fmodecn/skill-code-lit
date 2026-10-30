@@ -1,24 +1,60 @@
 {
-  "name": "skill-code-lit",
+  "name": "@fmode/skill-code-lit",
   "version": "1.0.0",
+  "description": "数字人开发基础规则技能｜fmode-code-lit 规则库：Lit 原生 ESM 无构建前端开发规范（单入口 Web Component / 子路径 History 路由 / OBS+CDN 部署 / 零构建），沉淀多页面开发 light DOM 五条死线等实战教训，让 AI 生成代码时不重犯同类错误。含全局技能、脚手架与规则安装器。",
   "type": "module",
-  "description": "fmode-code-lit 规则库：Lit 原生 ESM 无构建前端开发规范（web component / sub-path routing / CDN deployment / no-build）。随 npm 分发，含全局技能与脚手架。",
-  "keywords": ["lit", "web-component", "no-build", "esm", "frontend", "rules", "skill"],
+  "keywords": [
+    "fmode",
+    "digital-human",
+    "agent-rules",
+    "skill",
+    "claude-code",
+    "claude-skill",
+    "lit",
+    "web-component",
+    "no-build",
+    "native-esm",
+    "importmap",
+    "sub-path-routing",
+    "frontend",
+    "rules"
+  ],
+  "author": {
+    "name": "liuyuyang",
+    "email": "liu@fmode.cn"
+  },
   "license": "MPL-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fmodecn/fmode-code-lit.git"
+  },
+  "homepage": "https://github.com/fmodecn/fmode-code-lit#readme",
+  "bugs": {
+    "url": "https://github.com/fmodecn/fmode-code-lit/issues"
+  },
   "files": [
     "skills",
     "docs",
     "examples",
     ".claude",
     "README.md",
-    "CLAUDE.md"
+    "CLAUDE.md",
+    "LICENSE"
   ],
   "exports": {
-    ".": "./CLAUDE.md",
+    "./package.json": "./package.json",
+    "./skill/*": "./skills/fmode-code-lit/*",
     "./rules/*": "./.claude/rules/*"
   },
   "bin": {
     "fmode-code-lit": "skills/fmode-code-lit/scripts/install.mjs"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "scripts": {
     "smoke": "node skills/fmode-code-lit/scripts/smoke.mjs",

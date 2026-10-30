@@ -1,9 +1,16 @@
 # fmode-code-lit · Lit 原生 ESM 无构建开发规则仓
 
+> **这是方便数字人（FmodeAgent / FmodeCode）进行项目开发的基础规则技能。**
+> 它把踩过的坑沉淀成硬性约束，让 AI 在生成代码时不重犯同类错误。
+
 > **未来飞马 — 让 AI 进化提前发生，让 AI 落地快人一步**
 
 `fmode-code-lit` 是 FMODE 组织下的 **前端开发规则仓库**：为「无构建 / 无打包 / 纯原生 ESM + Lit 3.x」的轻量级 Web 应用
-定义一套可被 AI（Claude Code / FmodeCode）直接执行的工程规则、目录范式、组件/服务分层规范与部署规范。
+定义一套可被 AI（Claude Code / FmodeCode / FmodeAgent）直接执行的工程规则、目录范式、组件/服务分层规范与部署规范。
+
+> 主要面向**数字人开发**：AI 读本仓规则后写出的代码，天然避开 light DOM 投影失效、子路径丢前缀、
+> CDN 假刷新、多页高度链断裂等反复踩过的坑。npm 包名 `@fmode/skill-code-lit`：
+> `npm i @fmode/skill-code-lit` 或 `npx @fmode/skill-code-lit@latest install`。
 
 本仓 **不是** 一个前端框架，也 **不是** 一个 npm 库。它是一份 **规则 + 示例 + 脚手架技能** 的组合体：
 

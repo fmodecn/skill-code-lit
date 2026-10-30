@@ -80,7 +80,7 @@
 - **FMODE Repose**（静态依赖仓）：`/npm/lit/v3.x.x/`、`/npm/@lit-labs/{context,signals,router}/vx/`、`/npm/importmap/lit-v3.json`（公共 importmap）。
 - **OBS + CDN**（业务托管）：`index.html`（引入 importmap）、`app.js`、`/routes/`、`/components/`、`/services/`、`/utils/`。
 
-> ⚠️ 本仓为 **private**。上面是内部拓扑，对外文档/开源材料中只写「内部依赖仓 + OBS+CDN」即可，**不写域名、桶名、AK/SK、obsutil 路径**。
+> ⚠️ 上面是**内部拓扑示意**。对外文档/开源材料中只写「内部依赖仓 + OBS+CDN」即可，**不写域名、桶名、AK/SK、obsutil 路径**。
 
 ## 五、为什么这么选（对标 Angular zoneless）
 
