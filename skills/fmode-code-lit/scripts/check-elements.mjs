@@ -48,11 +48,15 @@ for (const f of files) {
   for (const m of text.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)) cssText += '\n' + m[1];
 }
 
-/** 在 cssText 中查找某个标签的样式块（tag { ... } 或 tag[attr] { ... }） */
+/** 在 cssText 中查找某个标签的样式块（tag { ... }、tag[attr] { ... }、逗号分组 a, tag { ... }） */
 function findRules(tag) {
-  const re = new RegExp(`(^|[\\s,{}>])${tag}\\s*\\{([^}]*)\\}`, 'gm');
+  const re = /([^{}]+)\{([^{}]*)\}/g;
   const rules = [];
-  for (const m of cssText.matchAll(re)) rules.push(m[2]);
+  for (const m of cssText.matchAll(re)) {
+    const selectors = m[1].split(',').map((s) => s.trim());
+    const hit = selectors.some((s) => new RegExp(`(^|[\\s>+~:.#\\[])${tag}(?![\\w-])`).test(s));
+    if (hit) rules.push(m[2]);
+  }
   return rules;
 }
 

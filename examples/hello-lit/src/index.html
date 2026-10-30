@@ -19,6 +19,9 @@
     :root { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
     body { margin: 0; }
     app-root { display: block; min-height: 100vh; }
+    /* 自定义元素默认按 inline 渲染 → 不吃高度、不形成块级盒子（见 SKILL.md 死线4） */
+    app-shell, side-menu, tabs-bar, tabs-container, page-view,
+    page-home, page-user-list, page-user-detail, page-404 { display: block; min-width: 0; }
     /* 全局主题可通过 CSS 自定义属性穿透 Shadow DOM */
     :root { --brand: #2b6cb0; --bg: #f7fafc; --border: #e2e8f0; }
   </style>
